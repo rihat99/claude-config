@@ -2,40 +2,60 @@
 """Move files or folders to a trash folder instead of deleting them.
 
 Destination:
-  * inside a git repository       -> <repo root>/trash/   (added to .gitignore if missing)
-  * anywhere else, or --home      -> ~/.trash/
+  * inside a git repository   -> <main checkout>/trash/  (added to .gitignore if missing;
+                                 a linked worktree uses the main checkout's trash, so
+                                 `git worktree remove` cannot take the trash with it)
+  * anywhere else, or --home  -> ~/.trash/  (on macOS that is the Finder Trash: visible in
+                                 the Dock, emptied by Finder after 30 days if that option is on)
   * $TRASH_DIR overrides both.
 
-Nothing already in the trash is ever overwritten: if a name is taken, the
-existing entry is renamed with a timestamp first and the incoming item keeps
-the clean name (newest = clean name). Emptying the trash is a human job.
+Nothing already in the trash is ever overwritten: if a name is taken, the existing entry is
+renamed with a timestamp first and the incoming item keeps the clean name (newest = clean
+name). A path on another filesystem than its trash folder is refused, because moving it
+would mean copying everything; ask for rm in that case. Emptying the trash is a human job.
 
 Usage: trash [--home] PATH [PATH ...]
 """
 import os
-import shutil
 import subprocess
 import sys
 import time
 
 
-def git_root(path):
+def home_trash():
+    if os.environ.get("TRASH_DIR"):
+        return os.path.expanduser(os.environ["TRASH_DIR"])
+    return os.path.expanduser("~/.trash")
+
+
+def repo_root(path):
+    """Main checkout of the repository that contains `path`, or None outside git."""
     try:
-        out = subprocess.run(
-            ["git", "-C", path, "rev-parse", "--show-toplevel"],
+        common = subprocess.run(
+            ["git", "-C", path, "rev-parse", "--git-common-dir"],
             capture_output=True, text=True, check=True,
         ).stdout.strip()
-        return out or None
     except Exception:
         return None
+    if not common:
+        return None
+    if not os.path.isabs(common):
+        common = os.path.join(path, common)
+    common = os.path.normpath(common)
+    if os.path.basename(common) == ".git":
+        return os.path.dirname(common)
+    # a submodule's common dir lives under the superproject's .git/modules: use its own root
+    out = subprocess.run(["git", "-C", path, "rev-parse", "--show-toplevel"],
+                         capture_output=True, text=True).stdout.strip()
+    return out or None
 
 
 def ensure_gitignored(root):
     gi = os.path.join(root, ".gitignore")
     lines = []
     if os.path.isfile(gi):
-        with open(gi) as f:
-            lines = [l.rstrip("\n") for l in f]
+        with open(gi, encoding="utf-8", errors="replace") as f:
+            lines = [l.rstrip("\r\n") for l in f]
     if any(l.strip() in ("trash/", "/trash/", "trash", "/trash") for l in lines):
         return
     with open(gi, "a") as f:
@@ -43,6 +63,31 @@ def ensure_gitignored(root):
             f.write("\n")
         f.write("trash/\n")
     print("trash: added 'trash/' to %s" % gi)
+
+
+def same(a, b):
+    """True when a and b are the same inode (case-insensitive filesystems included)."""
+    try:
+        return os.path.samefile(a, b)
+    except OSError:
+        return False
+
+
+def ancestors(path):
+    """path, its parent, ... up to the filesystem root."""
+    while True:
+        yield path
+        parent = os.path.dirname(path)
+        if parent == path:
+            return
+        path = parent
+
+
+def nearest_existing(path):
+    for p in ancestors(path):
+        if os.path.exists(p):
+            return p
+    return "/"
 
 
 def shelve(dst):
@@ -56,53 +101,83 @@ def shelve(dst):
     return cand
 
 
+def trash_one(p, force_home):
+    """Move one path. Returns 0 on success, 1 on a refusal or error."""
+    if p.strip() == "":
+        print("trash: empty path argument, refused", file=sys.stderr)
+        return 1
+    src = os.path.normpath(os.path.join(os.getcwd(), os.path.expanduser(p)))
+    if src == "/":
+        print("trash: refusing to trash /", file=sys.stderr)
+        return 1
+    if not os.path.lexists(src):
+        print("trash: missing, skipped: %s" % p, file=sys.stderr)
+        return 1
+
+    root = None
+    if os.environ.get("TRASH_DIR"):
+        dest_dir = home_trash()
+    else:
+        root = None if force_home else repo_root(os.path.dirname(src))  # the repo that contains src, even if src is itself a repo
+        dest_dir = os.path.join(root, "trash") if root else home_trash()
+
+    # refuse the trash folder itself and anything above it (compared by inode, not by name)
+    for d in ancestors(nearest_existing(dest_dir)):
+        if same(d, src):
+            print("trash: refusing to trash the trash folder or a folder above it: %s" % p, file=sys.stderr)
+            return 1
+    # already inside the trash
+    for d in ancestors(os.path.dirname(src)):
+        if os.path.isdir(dest_dir) and same(d, dest_dir):
+            print("trash: already in trash, skipped: %s" % p, file=sys.stderr)
+            return 0
+    # the move must be a rename, never a copy
+    if os.lstat(src).st_dev != os.stat(nearest_existing(dest_dir)).st_dev:
+        print("trash: %s is on a different filesystem than %s; refused (ask for rm, or set TRASH_DIR "
+              "to a folder on that filesystem)" % (p, dest_dir), file=sys.stderr)
+        return 1
+
+    if root:
+        ensure_gitignored(root)
+    os.makedirs(dest_dir, exist_ok=True)
+    dst = os.path.join(dest_dir, os.path.basename(src))
+    if os.path.lexists(dst):
+        moved = shelve(dst)
+        print("trash: older %s kept as %s" % (os.path.basename(dst), os.path.basename(moved)))
+    os.rename(src, dst)
+    print("%s -> %s" % (p, dst))
+    return 0
+
+
 def main(argv):
     force_home = False
     paths = []
+    only_paths = False
     for a in argv:
-        if a in ("-h", "--help"):
+        if only_paths:
+            paths.append(a)
+        elif a == "--":
+            only_paths = True
+        elif a in ("-h", "--help"):
             print(__doc__.strip())
             return 0
-        if a == "--home":
+        elif a == "--home":
             force_home = True
+        elif a.startswith("-") and a != "-":
+            print("trash: unknown option %s (use -- before paths that start with -)" % a, file=sys.stderr)
+            return 2
         else:
             paths.append(a)
     if not paths:
         print(__doc__.strip(), file=sys.stderr)
         return 2
-
     status = 0
     for p in paths:
-        src = os.path.abspath(p.rstrip("/"))
-        if not os.path.lexists(src):
-            print("trash: missing, skipped: %s" % p, file=sys.stderr)
+        try:
+            status |= trash_one(p, force_home)
+        except OSError as e:
+            print("trash: %s: %s" % (p, e), file=sys.stderr)
             status = 1
-            continue
-        if os.environ.get("TRASH_DIR"):
-            dest_dir = os.path.expanduser(os.environ["TRASH_DIR"])
-        else:
-            root = None if force_home else git_root(os.path.dirname(src) if os.path.isfile(src) else src)
-            if root:
-                dest_dir = os.path.join(root, "trash")
-                ensure_gitignored(root)
-            else:
-                dest_dir = os.path.expanduser("~/.trash")
-        os.makedirs(dest_dir, exist_ok=True)
-        dest_real = os.path.realpath(dest_dir)
-        src_real = os.path.realpath(src)
-        if src_real == dest_real or dest_real.startswith(src_real + os.sep):
-            print("trash: refusing to trash the trash folder itself: %s" % p, file=sys.stderr)
-            status = 1
-            continue
-        if src_real.startswith(dest_real + os.sep):
-            print("trash: already in trash, skipped: %s" % p, file=sys.stderr)
-            continue
-        dst = os.path.join(dest_dir, os.path.basename(src))
-        if os.path.lexists(dst):
-            moved = shelve(dst)
-            print("trash: older %s kept as %s" % (os.path.basename(dst), os.path.basename(moved)))
-        shutil.move(src, dst)
-        print("%s -> %s" % (p, dst))
     return status
 
 

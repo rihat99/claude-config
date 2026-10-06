@@ -4,10 +4,10 @@ Borrowed from what works in Archify's design system and from the common failures
 
 ## Layout
 
-- One reading column, `max-width: 72ch` for text; figures and tables may extend to ~96ch but never wider than the viewport minus 32 px.
+- One reading column, `max-width: 72ch`; figures and tables stay inside it (wide tables scroll inside their own box).
 - Vertical rhythm: 1.5–2 rem between blocks, 3–4 rem between sections. Don't fill every pixel.
 - Body 17 px (16 px on phones), line height 1.6. Headings: h1 2 rem, h2 1.4 rem, h3 1.1 rem, all with a tight line height (1.2).
-- Phone width (≤ 480 px): 16 px side gutters, no horizontal scroll, tables scroll inside their own box.
+- Narrow width (≤ 560 px): 16 px side gutters, no horizontal scroll, tables scroll inside their own box.
 
 ## Color
 
@@ -26,7 +26,7 @@ Borrowed from what works in Archify's design system and from the common failures
 ## Figures and tables
 
 - Figure first appears where it is needed; caption below, one sentence that tells the reader what to see.
-- Inline SVG, `viewBox` set, `width: 100%`, `max-width` fixed in px so it never blows up; text in the SVG ≥ 12 px at the rendered size.
+- Inline SVG, `viewBox` set, `width: 100%`, `max-width` fixed in px so it never blows up; text in the SVG ≥ 12 px at the rendered size; ink via `currentColor` and fills via the page's CSS variables so it works in both themes.
 - Tables: header row bold, right-aligned numbers, units in the header, thin horizontal rules only, zebra striping optional.
 - Big numbers (a KPI) get their own line with a small label; at most three per page.
 

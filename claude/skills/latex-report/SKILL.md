@@ -25,11 +25,11 @@ Read `references/writing.md` for the prose rules.
 
 ## 3. Design
 
-Start from `templates/report.tex`: `article`, 11 pt, 1-inch margins, Latin Modern with `microtype`, numbered sections, compact headings, no colored boxes, no fancy headers or footers, subtle link colors, `parskip` spacing (no indent). Don't add packages for decoration.
+Start from `templates/report.tex`: `article`, 11 pt, 1-inch margins, Latin Modern through `fontspec` (tectonic runs XeTeX, so Unicode such as −, µ, °, × prints as typed; the build summary lists any character the font lacks), `microtype`, numbered sections, compact headings, no colored boxes, no fancy headers or footers, subtle link colors, `parskip` spacing (no indent). Don't add packages for decoration. Numbers print as written: give each `S` column its own `table-format`, never a global rounding.
 
 ## 4. Figures
 
-- Schematics: make them with the `figure` skill (SVG → PDF) and include the PDF.
+- Schematics: make them with the `figure` skill and include the PDF it produces; when its render script reports no PDF converter, include the 3x PNG instead.
 - Plots: matplotlib with `~/.claude/venv/bin/python`; save as PDF; font size ≥ 8 pt at final width; one accent color; no chart junk (grid light or none, no top/right spines, no titles inside the plot when the caption says it).
 - Width: `\linewidth` for single figures, `0.48\linewidth` side by side with `subcaption`.
 
@@ -39,9 +39,9 @@ Start from `templates/report.tex`: `article`, 11 pt, 1-inch margins, Latin Moder
 bash ~/.claude/skills/latex-report/scripts/build.sh report.tex      # tectonic + warning summary + page PNGs
 ```
 
-The script compiles with tectonic (packages download on first use), prints a short summary of overfull boxes, undefined references and missing citations, and writes `report_pages/page-01.png` …. Open every page PNG with the Read tool and check: no overflow into the margin, no orphan heading at a page bottom, figures near their reference, tables within the text width, consistent fonts, no leftover placeholder text. Fix the source and rebuild until the summary is clean and the pages look right.
+The script compiles with tectonic (packages download on first use), prints a short summary of errors, missing characters, overfull boxes, undefined references and missing citations, and writes `report_pages/page-01.png` …. Open every page PNG with the Read tool and check: no overflow into the margin, no orphan heading at a page bottom, figures near their reference, tables within the text width, consistent fonts, no leftover placeholder text. Fix the source and rebuild until the summary is clean and the pages look right.
 
-Bibliography: `biblatex` with `biber` is handled by tectonic automatically; keep `references.bib` next to the `.tex`.
+Bibliography: `natbib` with BibTeX (built into tectonic; `biber`/`biblatex` is not installed on these machines). Keep `references.bib` next to the `.tex` and uncomment the natbib lines in the template.
 
 ## 6. Deliver
 

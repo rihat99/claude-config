@@ -1,6 +1,8 @@
 #!/bin/bash
 # Claude Code status line: [Model · effort] ctx 42% 105k/1.00M │ 5h 20% 6h0m left │ 7d 55% 2d13h left
 # Input: JSON on stdin (see https://code.claude.com/docs/en/statusline). Needs jq.
+export LC_ALL=C   # decimal point, not comma, whatever the machine's locale
+command -v jq >/dev/null 2>&1 || { printf '[status line needs jq]\n'; exit 0; }
 input=$(cat)
 
 C_RESET=$'\033[0m'
@@ -50,7 +52,7 @@ time_left() {
   local now=$(date +%s)
   local diff=$((target_ts - now))
   if [ "$diff" -le 0 ]; then
-    echo "now"
+    echo "0m"
     return
   fi
   local days=$((diff / 86400))

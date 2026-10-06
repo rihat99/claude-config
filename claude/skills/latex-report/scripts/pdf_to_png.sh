@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Render every page of a PDF to PNG with PyMuPDF from the shared venv.
-# Usage: pdf_to_png.py file.pdf [dpi]   → <file>_pages/page-NN.png (prints the paths)
+# Usage: pdf_to_png.sh file.pdf [dpi]   → <file>_pages/page-NN.png (prints the paths)
 PY="$HOME/.claude/venv/bin/python"
 [ -x "$PY" ] || PY=python3
 exec "$PY" - "$@" <<'PYEOF'
@@ -13,7 +13,7 @@ except ImportError:
     except ImportError:
         sys.exit("pdf_to_png: PyMuPDF missing. Run ~/claude-config/install.sh (creates ~/.claude/venv).")
 if len(sys.argv) < 2:
-    sys.exit("usage: pdf_to_png.py file.pdf [dpi]")
+    sys.exit("usage: pdf_to_png.sh file.pdf [dpi]")
 pdf = os.path.abspath(sys.argv[1])
 dpi = int(sys.argv[2]) if len(sys.argv) > 2 else 110
 out_dir = os.path.splitext(pdf)[0] + "_pages"

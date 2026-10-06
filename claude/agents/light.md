@@ -2,7 +2,9 @@
 name: light
 description: Light worker on Sonnet for mechanical, no-judgment subtasks: file digests, greps across many files, summaries of logs, boilerplate, format conversions. Spawn several in parallel.
 model: sonnet
-effort: high
+effort: {{sonnet.effort}}
+disallowedTools: Agent
+omitClaudeMd: true
 color: green
 ---
 

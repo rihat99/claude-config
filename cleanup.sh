@@ -1,73 +1,35 @@
 #!/usr/bin/env bash
-# Clean old Claude Code state on this machine. Dry run by default.
+# Move leftover Claude Code state on this machine into the trash. Dry run by default.
 #
-#   bash cleanup.sh              # show what would happen
-#   bash cleanup.sh --yes        # do it
-#   bash cleanup.sh --days 60    # change the age threshold (default 30)
+#   bash cleanup.sh          # show what would move
+#   bash cleanup.sh --yes    # move it
 #
-# Deleted outright (caches and chat transcripts older than N days):
-#   ~/.claude/projects/*/<session>.jsonl and the session's folder
-#   ~/.claude/{file-history,session-env,shell-snapshots,debug,backups,paste-cache,telemetry,todos}/*
-# Moved to ~/.trash/claude-cleanup-<date>/ (regardless of age):
-#   ~/.claude/{handoffs,jobs,tasks,daemon,daemon.log,downloads/*}
-#   ~/.claude/*.bak* , *.pre-migrate, CLAUDE.md.bak*, any *.codex.* file
+# Moved (via bin/trash, so nothing is deleted or overwritten) to
+# <home trash>/claude-cleanup-<date>/ :
+#   ~/.claude/handoffs, ~/.claude/downloads/*, ~/.claude/*.bak*, *.pre-migrate, any *.codex.* file
+# Not touched: chats (Claude Code removes transcripts older than 30 days by itself and keeps
+# Desktop sessions), jobs/ daemon/ tasks/ (live background-session state), memory/ folders.
 set -uo pipefail
-CL="$HOME/.claude"; DAYS=30; YES=0
-while [ $# -gt 0 ]; do
-  case "$1" in --yes|-y) YES=1 ;; --days) DAYS="$2"; shift ;; *) echo "unknown arg $1" >&2; exit 2 ;; esac; shift
-done
-TRASH="$HOME/.trash/claude-cleanup-$(date +%Y%m%d)"
+CL="$HOME/.claude"; YES=0
+for a in "$@"; do case "$a" in --yes|-y) YES=1 ;; *) echo "unknown arg $a" >&2; exit 2 ;; esac; done
 [ -d "$CL" ] || { echo "no $CL on this machine"; exit 0; }
-bytes() { [ $# -gt 0 ] || { echo "0 MB"; return; }; du -sk "$@" 2>/dev/null | awk '{s+=$1} END {printf "%.0f MB", s/1024}'; }
-run() { if [ "$YES" = 1 ]; then "$@"; fi; }
+TRASH_BIN="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/bin/trash"
+TRASH="${TRASH_DIR:-$HOME/.trash}/claude-cleanup-$(date +%Y%m%d)"   # on macOS ~/.trash is the Finder Trash
 
-echo "== chats older than $DAYS days (deleted)"
-OLD_JSONL=$(find "$CL/projects" -mindepth 2 -maxdepth 2 -name '*.jsonl' -mtime +"$DAYS" 2>/dev/null)
-n=0; dirs=""
-for f in $OLD_JSONL; do
-  n=$((n+1)); sid="$(basename "${f%.jsonl}")"; sid="${sid#agent-}"
-  d="$(dirname "$f")/$sid"; [ -d "$d" ] && dirs="$dirs $d"
-done
-echo "   $n transcript files, $(bytes $OLD_JSONL $dirs)"
-if [ "$YES" = 1 ]; then
-  for f in $OLD_JSONL; do rm -f "$f"; done
-  for d in $dirs; do rm -rf "$d"; done
-  # remove session folders whose transcript is gone, then empty project dirs (memory/ folders are kept)
-  for d in "$CL"/projects/*/*/; do
-    [ -d "$d" ] || continue; b="$(basename "$d")"; p="$(dirname "$d")"
-    case "$b" in memory|transcripts) continue ;; esac
-    [ -f "$p/$b.jsonl" ] || [ -f "$p/agent-$b.jsonl" ] || { [ "$(find "$d" -type f -newermt "-$DAYS days" 2>/dev/null | head -1)" ] || rm -rf "$d"; }
-  done
-  find "$CL/projects" -mindepth 1 -type d -empty -delete 2>/dev/null
+items=()
+[ -e "$CL/handoffs" ] && items+=("$CL/handoffs")
+for p in "$CL"/downloads/* "$CL"/*.bak* "$CL"/*.pre-migrate; do [ -e "$p" ] && items+=("$p"); done
+while IFS= read -r -d '' p; do items+=("$p"); done \
+  < <(find "$CL" -maxdepth 3 -name '*.codex.*' -not -path "*/handoffs/*" -print0 2>/dev/null)
+
+if [ ${#items[@]} -eq 0 ]; then
+  echo "nothing to clean; ~/.claude is $(du -sh "$CL" 2>/dev/null | cut -f1)"
+  exit 0
 fi
-
-echo "== caches older than $DAYS days (deleted)"
-for sub in file-history session-env shell-snapshots debug backups paste-cache telemetry todos; do
-  [ -d "$CL/$sub" ] || continue
-  items=$(find "$CL/$sub" -mindepth 1 -maxdepth 1 -mtime +"$DAYS" 2>/dev/null)
-  [ -n "$items" ] || continue
-  echo "   $sub: $(echo "$items" | wc -l | tr -d ' ') items, $(bytes $items)"
-  if [ "$YES" = 1 ]; then echo "$items" | while read -r p; do rm -rf "$p"; done; fi
+echo "== to $TRASH"
+printf '%s\0' "${items[@]}" | sort -zu | while IFS= read -r -d '' p; do
+  printf '   %-8s %s\n' "$(du -sh "$p" 2>/dev/null | cut -f1)" "${p#$HOME/}"
+  [ "$YES" = 1 ] && TRASH_DIR="$TRASH" "$TRASH_BIN" "$p" >/dev/null
 done
-
-echo "== moved to $TRASH"
-tomove=""
-for p in handoffs jobs tasks daemon daemon.log; do [ -e "$CL/$p" ] && tomove="$tomove $CL/$p"; done
-for p in "$CL"/downloads/* "$CL"/*.bak* "$CL"/*.pre-migrate "$CL"/CLAUDE.md.bak* "$CL"/settings.json.bak*; do [ -e "$p" ] && tomove="$tomove $p"; done
-codex=$(find "$CL" -maxdepth 3 -name '*.codex.*' -not -path "*/handoffs/*" 2>/dev/null); tomove="$tomove $codex"
-tomove="$(printf '%s\n' $tomove | sort -u | tr '\n' ' ')"
-if [ -n "$(echo $tomove)" ]; then
-  for p in $tomove; do echo "   $(basename "$p")  $(bytes "$p")"; done
-  if [ "$YES" = 1 ]; then
-    mkdir -p "$TRASH"
-    for p in $tomove; do
-      dst="$TRASH/$(basename "$p")"; [ -e "$dst" ] && dst="$dst.$(date +%H%M%S)"
-      mv "$p" "$dst"
-    done
-  fi
-else
-  echo "   nothing"
-fi
-
-echo "== ~/.claude size now: $(bytes "$CL")"
+echo "== ~/.claude now: $(du -sh "$CL" 2>/dev/null | cut -f1)"
 [ "$YES" = 1 ] || echo "(dry run; add --yes to apply)"

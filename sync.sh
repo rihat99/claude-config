@@ -4,12 +4,24 @@
 #
 #   bash sync.sh                 # all hosts
 #   bash sync.sh robotics2       # one or more hosts
-#   bash sync.sh --no-tools ...  # pass install.sh flags after the hosts
+#   bash sync.sh --no-tools ...  # pass install.sh flags (--no-tools, --no-autoresearch)
+#   bash sync.sh --force ...     # overwrite a remote copy that has its own edits or commits
+#
+# A host whose ~/claude-config has uncommitted edits, or commits this copy does not have, is
+# skipped so nothing is lost: copy those changes back here first, or pass --force.
+# The remote trash/ folder (bin/trash inside the repo) is never touched.
 set -uo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ALL_HOSTS=(rikhat_ws robotics1 robotics2 robotics3 robomed4)
-HOSTS=(); FLAGS=()
-for a in "$@"; do case "$a" in --*) FLAGS+=("$a") ;; *) HOSTS+=("$a") ;; esac; done
+HOSTS=(); FLAGS=(); FORCE=0
+for a in "$@"; do
+  case "$a" in
+    --force) FORCE=1 ;;
+    --no-tools|--no-autoresearch) FLAGS+=("$a") ;;
+    -*) echo "unknown flag $a" >&2; exit 2 ;;
+    *) HOSTS+=("$a") ;;
+  esac
+done
 [ ${#HOSTS[@]} -gt 0 ] || HOSTS=("${ALL_HOSTS[@]}")
 
 for h in "${HOSTS[@]}"; do
@@ -17,7 +29,19 @@ for h in "${HOSTS[@]}"; do
   if ! ssh -o BatchMode=yes -o ConnectTimeout=8 "$h" true 2>/dev/null; then
     echo "unreachable, skipped"; continue
   fi
+  if [ "$FORCE" = 0 ]; then
+    # first line: remote HEAD (or NONE), then any uncommitted changes
+    state="$(ssh -o BatchMode=yes "$h" 'cd ~/claude-config 2>/dev/null || { echo NONE; exit 0; }; git rev-parse HEAD 2>/dev/null || echo NONE; git status --porcelain 2>/dev/null | head -20')"
+    rhead="$(printf '%s\n' "$state" | head -1)"
+    dirty="$(printf '%s\n' "$state" | sed -n '2,$p')"
+    if [ -n "$dirty" ]; then
+      echo "skipped: ~/claude-config on $h has uncommitted changes (copy them back here, or --force):"; echo "$dirty"; continue
+    fi
+    if [ "$rhead" != NONE ] && ! git -C "$REPO" merge-base --is-ancestor "$rhead" HEAD 2>/dev/null; then
+      echo "skipped: $h has commits this copy does not have ($rhead); copy them back here, or --force"; continue
+    fi
+  fi
   # vendor/ travels with the repo: the autoresearch upstream is private and only the Mac can clone it
-  rsync -a --delete --exclude .DS_Store "$REPO/" "$h:claude-config/" || { echo "rsync failed"; continue; }
+  rsync -a --delete --exclude .DS_Store --exclude /trash/ "$REPO/" "$h:claude-config/" || { echo "rsync failed"; continue; }
   ssh -o BatchMode=yes "$h" "bash ~/claude-config/install.sh ${FLAGS[*]:-}"
 done

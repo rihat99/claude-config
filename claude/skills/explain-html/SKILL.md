@@ -1,6 +1,6 @@
 ---
 name: explain-html
-description: Build a single-file HTML page that explains a topic, a codebase, a method, experiment results or a plan with a clear narrative, minimal design, inline SVG figures and light/dark support, then render it and look at it. Use when the user asks for an explainer, a web page, an interactive report, a visual walkthrough, a page to share, or "something I can open in a browser". For architecture, flow or sequence diagrams on their own use the archify skill; for printable reports use latex-report; for slides use slides.
+description: Build a single-file HTML page that explains a topic, a codebase, a method, results or a plan with a clear narrative, minimal design, inline SVG figures and light/dark support, then render it and look at it. Use only when the user asks for a web page, an HTML explainer, an interactive page, or "something I can open in a browser"; a question or a write-up without those words is answered in chat or as a latex-report. For a standalone interactive system map use archify; for slides use slides.
 ---
 
 # Explain as an HTML page
@@ -32,8 +32,8 @@ Start from `templates/page.html`; it already encodes these rules.
 
 ## 3. Figures
 
-- Draw figures as inline SVG following the `figure` skill (few elements, grid-aligned, labels inside shapes, one accent).
-- For a real system / data-flow / sequence map, build it with the `archify` skill and embed the result in an `<iframe>` next to the page, or link to it.
+- Draw figures as inline SVG following the `figure` skill (few elements, grid-aligned, labels inside shapes, one accent), but take ink and fills from the page's CSS variables (`stroke="currentColor"`, `fill="var(--surface)"`) so they stay visible in dark mode.
+- For a real system / data-flow / sequence map, build it with the `archify` skill and link to its HTML file from the page (the page itself stays a single file).
 - Data plots: render with matplotlib (the `~/.claude/venv/bin/python` env has it) to PNG at 2x, or write the chart as SVG by hand when it has fewer than ~30 points. Match the page's font and accent.
 
 ## 4. Build
@@ -49,7 +49,7 @@ Start from `templates/page.html`; it already encodes these rules.
 bash ~/.claude/skills/explain-html/scripts/render.sh page.html        # desktop + narrow screenshots
 ```
 
-Open each screenshot with the Read tool and check: nothing clipped, text never wider than the column, figures readable at both widths, headings in order, dark mode legible (`render.sh --dark`). Fix and re-render. If no browser is available the script says so; then at least validate the HTML (`python3 -c "import html.parser"` style sanity check) and tell the user you could not look at it.
+The script shoots the whole page in light mode at 1280 px and at 500 px (Chrome's minimum window width; real phones are narrower, so keep the layout fluid) and splits tall pages into PNGs of 1600 px. Open every PNG with the Read tool and check: nothing clipped, text never wider than the column, figures readable at both widths, headings in order. Then run `render.sh page.html --dark` and check the dark PNGs the same way. Fix and re-render. If no browser is available the script says so; then read the HTML once more for mistakes and tell the user the page was not viewed.
 
 ## 6. Deliver
 

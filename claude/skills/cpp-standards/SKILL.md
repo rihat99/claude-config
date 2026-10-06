@@ -1,6 +1,6 @@
 ---
 name: cpp-standards
-description: Apply C++17 / CUDA coding standards — naming, RAII, smart pointers, error handling, device-function conventions. Use when writing or editing .cpp, .h, .hpp, .cu or .cuh files in any project.
+description: Apply C++17 / CUDA coding standards — naming, RAII, smart pointers, error handling, device-function conventions. Use when writing or editing C++ or CUDA sources (.cpp, .cc, .cxx, .hpp, .hh, .h in a C++ project, .cu, .cuh) in any project.
 ---
 
 # C++ / CUDA Standards (C++17)
@@ -53,9 +53,9 @@ Match the surrounding project's style first (its `.clang-format`, naming, includ
 
 ## Building PyTorch C++/CUDA extensions
 
-From the project root, with the project's environment active:
+From the project root, into the project's own environment (never a bare `pip`, which may belong to another Python):
 
 ```bash
 export TORCH_CUDA_ARCH_LIST="8.0+PTX"   # adjust to the target GPU
-pip install -e . --no-build-isolation
+uv pip install -e . --no-build-isolation --python <project python>   # or: <project python> -m pip install -e . --no-build-isolation
 ```

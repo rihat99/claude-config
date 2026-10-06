@@ -3,9 +3,11 @@
 
 % ---- page and fonts ------------------------------------------------------
 \usepackage[margin=1in]{geometry}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
+\usepackage{fontspec}                 % XeTeX (tectonic): real Unicode, Latin Modern by default
 \usepackage{microtype}
+\usepackage{newunicodechar}            % math symbols the text font lacks, usable directly in prose
+\newunicodechar{≤}{\ensuremath{\leq}}\newunicodechar{≥}{\ensuremath{\geq}}\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{±}{\ensuremath{\pm}}\newunicodechar{∞}{\ensuremath{\infty}}\newunicodechar{≠}{\ensuremath{\neq}}
 \usepackage[parfill]{parskip}          % space between paragraphs, no indent
 \setlength{\parskip}{0.6\baselineskip}
 
@@ -24,8 +26,7 @@
 \usepackage{booktabs}
 \usepackage{subcaption}
 \usepackage[labelfont=bf,font=small,skip=6pt]{caption}
-\usepackage{siunitx}
-\sisetup{round-mode=places, round-precision=2, table-format=1.2}
+\usepackage{siunitx}                  % numbers print as written; set table-format per column
 \usepackage{amsmath,amssymb}
 
 % ---- links and references -------------------------------------------------
@@ -35,8 +36,8 @@
 \usepackage[capitalise,noabbrev]{cleveref}
 
 % ---- bibliography (optional): keep references.bib next to this file ------
-% \usepackage[style=numeric,sorting=none]{biblatex}
-% \addbibresource{references.bib}
+% BibTeX is built into tectonic; biber is not installed on these machines.
+% \usepackage[numbers,sort&compress]{natbib}
 
 \title{\vspace{-1.5em}Title that states the result}
 \author{Author Name}
@@ -54,7 +55,7 @@ One paragraph on why this matters and what was unknown.
 \section{Approach}
 What was done and why this way. Reference figures right where they are needed, see \cref{fig:overview}.
 
-\begin{figure}[t]
+\begin{figure}[!htb]
   \centering
   % \includegraphics[width=\linewidth]{figures/overview.pdf}
   \rule{\linewidth}{4cm}  % placeholder, replace with \includegraphics
@@ -65,11 +66,11 @@ What was done and why this way. Reference figures right where they are needed, s
 \section{Results}
 Lead with the main number, then the table (\cref{tab:main}).
 
-\begin{table}[t]
+\begin{table}[!htb]
   \centering
   \caption{Caption states the takeaway. Units in headers, consistent decimals.}
   \label{tab:main}
-  \begin{tabular}{l S S}
+  \begin{tabular}{l S[table-format=2.2] S[table-format=1.2]}
     \toprule
     Variant & {Error (\si{\milli\metre})} & {Time (\si{\second})} \\
     \midrule
@@ -87,5 +88,6 @@ What the result does and does not show. Where it breaks.
   \item Concrete, ordered, each with a reason.
 \end{itemize}
 
-% \printbibliography
+% \bibliographystyle{plainnat}
+% \bibliography{references}
 \end{document}
