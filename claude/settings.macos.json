@@ -1,0 +1,13 @@
+{
+  "enabledPlugins": {
+    "drawio@drawio": true
+  },
+  "extraKnownMarketplaces": {
+    "drawio": {
+      "source": {
+        "source": "github",
+        "repo": "jgraph/drawio-mcp"
+      }
+    }
+  }
+}

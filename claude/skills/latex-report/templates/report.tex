@@ -1,0 +1,91 @@
+% Minimal, readable report template. Compile: tectonic report.tex
+\documentclass[11pt,a4paper]{article}
+
+% ---- page and fonts ------------------------------------------------------
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[parfill]{parskip}          % space between paragraphs, no indent
+\setlength{\parskip}{0.6\baselineskip}
+
+% ---- structure ------------------------------------------------------------
+\usepackage{titlesec}
+\titleformat*{\section}{\Large\bfseries}
+\titleformat*{\subsection}{\large\bfseries}
+\titleformat*{\subsubsection}{\normalsize\bfseries}
+\titlespacing*{\section}{0pt}{1.6\baselineskip}{0.6\baselineskip}
+\titlespacing*{\subsection}{0pt}{1.2\baselineskip}{0.4\baselineskip}
+\usepackage{enumitem}
+\setlist{nosep, leftmargin=1.4em}
+
+% ---- figures, tables, numbers ---------------------------------------------
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[labelfont=bf,font=small,skip=6pt]{caption}
+\usepackage{siunitx}
+\sisetup{round-mode=places, round-precision=2, table-format=1.2}
+\usepackage{amsmath,amssymb}
+
+% ---- links and references -------------------------------------------------
+\usepackage{xcolor}
+\definecolor{linkblue}{HTML}{1F4E9A}
+\usepackage[colorlinks=true, linkcolor=linkblue, citecolor=linkblue, urlcolor=linkblue]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+% ---- bibliography (optional): keep references.bib next to this file ------
+% \usepackage[style=numeric,sorting=none]{biblatex}
+% \addbibresource{references.bib}
+
+\title{\vspace{-1.5em}Title that states the result}
+\author{Author Name}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Summary}
+Three to six sentences: the question, what was done, the main result with a number, what it means.
+
+\section{Problem}
+One paragraph on why this matters and what was unknown.
+
+\section{Approach}
+What was done and why this way. Reference figures right where they are needed, see \cref{fig:overview}.
+
+\begin{figure}[t]
+  \centering
+  % \includegraphics[width=\linewidth]{figures/overview.pdf}
+  \rule{\linewidth}{4cm}  % placeholder, replace with \includegraphics
+  \caption{One sentence that tells the reader what to see in this figure.}
+  \label{fig:overview}
+\end{figure}
+
+\section{Results}
+Lead with the main number, then the table (\cref{tab:main}).
+
+\begin{table}[t]
+  \centering
+  \caption{Caption states the takeaway. Units in headers, consistent decimals.}
+  \label{tab:main}
+  \begin{tabular}{l S S}
+    \toprule
+    Variant & {Error (\si{\milli\metre})} & {Time (\si{\second})} \\
+    \midrule
+    Baseline & 12.34 & 1.20 \\
+    Ours     &  8.10 & 1.35 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Discussion and limits}
+What the result does and does not show. Where it breaks.
+
+\section{Next steps}
+\begin{itemize}
+  \item Concrete, ordered, each with a reason.
+\end{itemize}
+
+% \printbibliography
+\end{document}

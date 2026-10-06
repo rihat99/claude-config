@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+"""Move files or folders to a trash folder instead of deleting them.
+
+Destination:
+  * inside a git repository       -> <repo root>/trash/   (added to .gitignore if missing)
+  * anywhere else, or --home      -> ~/.trash/
+  * $TRASH_DIR overrides both.
+
+Nothing already in the trash is ever overwritten: if a name is taken, the
+existing entry is renamed with a timestamp first and the incoming item keeps
+the clean name (newest = clean name). Emptying the trash is a human job.
+
+Usage: trash [--home] PATH [PATH ...]
+"""
+import os
+import shutil
+import subprocess
+import sys
+import time
+
+
+def git_root(path):
+    try:
+        out = subprocess.run(
+            ["git", "-C", path, "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        return out or None
+    except Exception:
+        return None
+
+
+def ensure_gitignored(root):
+    gi = os.path.join(root, ".gitignore")
+    lines = []
+    if os.path.isfile(gi):
+        with open(gi) as f:
+            lines = [l.rstrip("\n") for l in f]
+    if any(l.strip() in ("trash/", "/trash/", "trash", "/trash") for l in lines):
+        return
+    with open(gi, "a") as f:
+        if lines and lines[-1] != "":
+            f.write("\n")
+        f.write("trash/\n")
+    print("trash: added 'trash/' to %s" % gi)
+
+
+def shelve(dst):
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    cand = "%s.%s" % (dst, stamp)
+    i = 0
+    while os.path.lexists(cand):
+        i += 1
+        cand = "%s.%s.%d" % (dst, stamp, i)
+    os.rename(dst, cand)
+    return cand
+
+
+def main(argv):
+    force_home = False
+    paths = []
+    for a in argv:
+        if a in ("-h", "--help"):
+            print(__doc__.strip())
+            return 0
+        if a == "--home":
+            force_home = True
+        else:
+            paths.append(a)
+    if not paths:
+        print(__doc__.strip(), file=sys.stderr)
+        return 2
+
+    status = 0
+    for p in paths:
+        src = os.path.abspath(p.rstrip("/"))
+        if not os.path.lexists(src):
+            print("trash: missing, skipped: %s" % p, file=sys.stderr)
+            status = 1
+            continue
+        if os.environ.get("TRASH_DIR"):
+            dest_dir = os.path.expanduser(os.environ["TRASH_DIR"])
+        else:
+            root = None if force_home else git_root(os.path.dirname(src) if os.path.isfile(src) else src)
+            if root:
+                dest_dir = os.path.join(root, "trash")
+                ensure_gitignored(root)
+            else:
+                dest_dir = os.path.expanduser("~/.trash")
+        os.makedirs(dest_dir, exist_ok=True)
+        dest_real = os.path.realpath(dest_dir)
+        src_real = os.path.realpath(src)
+        if src_real == dest_real or dest_real.startswith(src_real + os.sep):
+            print("trash: refusing to trash the trash folder itself: %s" % p, file=sys.stderr)
+            status = 1
+            continue
+        if src_real.startswith(dest_real + os.sep):
+            print("trash: already in trash, skipped: %s" % p, file=sys.stderr)
+            continue
+        dst = os.path.join(dest_dir, os.path.basename(src))
+        if os.path.lexists(dst):
+            moved = shelve(dst)
+            print("trash: older %s kept as %s" % (os.path.basename(dst), os.path.basename(moved)))
+        shutil.move(src, dst)
+        print("%s -> %s" % (p, dst))
+    return status
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
