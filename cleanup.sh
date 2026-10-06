@@ -18,7 +18,7 @@ while [ $# -gt 0 ]; do
 done
 TRASH="$HOME/.trash/claude-cleanup-$(date +%Y%m%d)"
 [ -d "$CL" ] || { echo "no $CL on this machine"; exit 0; }
-bytes() { du -sk "$@" 2>/dev/null | awk '{s+=$1} END {printf "%.0f MB", s/1024}'; }
+bytes() { [ $# -gt 0 ] || { echo "0 MB"; return; }; du -sk "$@" 2>/dev/null | awk '{s+=$1} END {printf "%.0f MB", s/1024}'; }
 run() { if [ "$YES" = 1 ]; then "$@"; fi; }
 
 echo "== chats older than $DAYS days (deleted)"
@@ -28,7 +28,7 @@ for f in $OLD_JSONL; do
   n=$((n+1)); sid="$(basename "${f%.jsonl}")"; sid="${sid#agent-}"
   d="$(dirname "$f")/$sid"; [ -d "$d" ] && dirs="$dirs $d"
 done
-echo "   $n transcript files, $(bytes $OLD_JSONL $dirs 2>/dev/null)"
+echo "   $n transcript files, $(bytes $OLD_JSONL $dirs)"
 if [ "$YES" = 1 ]; then
   for f in $OLD_JSONL; do rm -f "$f"; done
   for d in $dirs; do rm -rf "$d"; done
