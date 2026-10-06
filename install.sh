@@ -55,10 +55,11 @@ link() { # link SRC DST
 
 # ---------------------------------------------------------------- shell PATH
 log "PATH"
+# .bashrc always; .zshrc only on macOS or when it already exists
 for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
-  [ -f "$rc" ] || { [ "$(basename "$rc")" = ".zshrc" ] && [ "$OS" != "Darwin" ]; } && continue
+  case "$rc" in *.zshrc) [ "$OS" = "Darwin" ] || [ -f "$rc" ] || continue ;; esac
   [ -f "$rc" ] || touch "$rc"
-  grep -q 'HOME/.local/bin' "$rc" 2>/dev/null || { printf '\n# claude-config\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$rc"; note "added ~/.local/bin to PATH in $rc"; }
+  grep -q 'local/bin' "$rc" 2>/dev/null || { printf '\n# claude-config\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$rc"; note "added ~/.local/bin to PATH in $rc"; }
 done
 
 # ---------------------------------------------------------------- config files
