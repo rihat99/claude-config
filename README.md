@@ -15,7 +15,7 @@ tmux/tmux.conf            shared tmux config
 install.sh                link everything into ~/.claude, install user-local tools, install autoresearch
 sync.sh                   rsync this repo to the other machines and run install.sh there
 cleanup.sh                delete chats/caches older than 30 days, trash old handoffs/jobs/backups
-vendor/                   (gitignored) autoresearch_skill clone, created by install.sh
+vendor/                   (gitignored) autoresearch_skill clone; the upstream repo is private, so the Mac clones it and sync.sh copies it along
 ```
 
 ## Daily use

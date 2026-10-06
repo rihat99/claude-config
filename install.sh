@@ -121,7 +121,23 @@ if [ "$DO_TOOLS" = 1 ]; then
   log "Tools (user-local, no sudo)"
 
   if ! command -v uv >/dev/null 2>&1; then
-    note "installing uv"; curl -LsSf https://astral.sh/uv/install.sh | UV_NO_MODIFY_PATH=1 sh >/dev/null 2>&1 || warn "uv install failed"
+    note "installing uv"
+    curl -LsSf --max-time 60 https://astral.sh/uv/install.sh | UV_NO_MODIFY_PATH=1 sh >/dev/null 2>&1
+    if ! command -v uv >/dev/null 2>&1; then
+      # fallback: GitHub release binary (some hosts block astral.sh)
+      case "$OS-$ARCH" in
+        Linux-x86_64)  UVA=uv-x86_64-unknown-linux-gnu.tar.gz ;;
+        Linux-aarch64) UVA=uv-aarch64-unknown-linux-gnu.tar.gz ;;
+        Darwin-arm64)  UVA=uv-aarch64-apple-darwin.tar.gz ;;
+        Darwin-x86_64) UVA=uv-x86_64-apple-darwin.tar.gz ;;
+        *) UVA="" ;;
+      esac
+      TMP="$(mktemp -d)"
+      [ -n "$UVA" ] && dl "https://github.com/astral-sh/uv/releases/latest/download/$UVA" "$TMP/uv.tgz" && tar -xzf "$TMP/uv.tgz" -C "$TMP" \
+        && B="$(find "$TMP" -type f -name uv | head -1)" && [ -n "$B" ] && mv "$B" "$HOME/.local/bin/uv" && chmod +x "$HOME/.local/bin/uv"
+      rm -rf "$TMP"
+    fi
+    command -v uv >/dev/null 2>&1 && note "installed uv" || warn "uv install failed"
   fi
   if command -v uv >/dev/null 2>&1; then
     [ -x "$CL/venv/bin/python" ] || { note "creating ~/.claude/venv"; uv venv -q "$CL/venv" || warn "venv creation failed"; }
@@ -144,7 +160,26 @@ if [ "$DO_TOOLS" = 1 ]; then
 
   if ! command -v tectonic >/dev/null 2>&1; then
     note "installing tectonic (LaTeX)"
-    (cd "$HOME/.local/bin" && curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net | sh >/dev/null 2>&1) && note "installed tectonic" || warn "tectonic install failed"
+    (cd "$HOME/.local/bin" && curl --proto '=https' --tlsv1.2 -fsSL --max-time 120 https://drop-sh.fullyjustified.net | sh >/dev/null 2>&1)
+    if ! command -v tectonic >/dev/null 2>&1; then
+      # fallback: GitHub "continuous" release (some hosts block the installer host)
+      case "$OS-$ARCH" in
+        Linux-x86_64)  TT=x86_64-unknown-linux-musl ;;
+        Linux-aarch64) TT=aarch64-unknown-linux-musl ;;
+        Darwin-arm64)  TT=aarch64-apple-darwin ;;
+        Darwin-x86_64) TT=x86_64-apple-darwin ;;
+        *) TT="" ;;
+      esac
+      if [ -n "$TT" ]; then
+        TURL="$(curl -fsSL --max-time 30 https://api.github.com/repos/tectonic-typesetting/tectonic/releases/tags/continuous 2>/dev/null | grep -o "https://[^\"]*tectonic-[^\"]*-$TT.tar.gz" | head -1)"
+        [ -n "$TURL" ] || TURL="https://github.com/tectonic-typesetting/tectonic/releases/download/continuous/tectonic-0.17.0+20260731-$TT.tar.gz"
+        TMP="$(mktemp -d)"
+        dl "$TURL" "$TMP/t.tgz" && tar -xzf "$TMP/t.tgz" -C "$TMP" && B="$(find "$TMP" -type f -name tectonic | head -1)" \
+          && [ -n "$B" ] && mv "$B" "$HOME/.local/bin/tectonic" && chmod +x "$HOME/.local/bin/tectonic"
+        rm -rf "$TMP"
+      fi
+    fi
+    command -v tectonic >/dev/null 2>&1 && note "installed tectonic" || warn "tectonic install failed"
   fi
 
   if ! command -v resvg >/dev/null 2>&1; then
@@ -208,11 +243,13 @@ fi
 # ---------------------------------------------------------------- autoresearch
 if [ "$DO_AUTORESEARCH" = 1 ]; then
   log "Autoresearch skill"
+  # The upstream repo is private. The Mac clones/updates it; sync.sh copies vendor/ to the other machines.
   mkdir -p "$REPO/vendor"
   if [ -d "$REPO/vendor/autoresearch_skill/.git" ]; then
-    git -C "$REPO/vendor/autoresearch_skill" pull -q --ff-only 2>/dev/null || warn "could not update autoresearch (offline?)"
+    [ "$OS" = "Darwin" ] && { git -C "$REPO/vendor/autoresearch_skill" pull -q --ff-only 2>/dev/null || warn "could not update autoresearch (offline or no GitHub access)"; }
   else
-    git clone -q https://github.com/ramazan793/autoresearch_skill.git "$REPO/vendor/autoresearch_skill" 2>/dev/null || warn "could not clone autoresearch"
+    GIT_TERMINAL_PROMPT=0 git clone -q https://github.com/ramazan793/autoresearch_skill.git "$REPO/vendor/autoresearch_skill" 2>/dev/null \
+      || warn "could not clone autoresearch (private repo; run sync.sh from the Mac to copy it)"
   fi
   if [ -f "$REPO/vendor/autoresearch_skill/install.sh" ]; then
     # their installer refuses a symlinked skill dir only if it is ours; it writes into ~/.claude/skills/autoresearch

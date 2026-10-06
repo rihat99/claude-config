@@ -17,6 +17,7 @@ for h in "${HOSTS[@]}"; do
   if ! ssh -o BatchMode=yes -o ConnectTimeout=8 "$h" true 2>/dev/null; then
     echo "unreachable, skipped"; continue
   fi
-  rsync -a --delete --exclude vendor/ --exclude .DS_Store "$REPO/" "$h:claude-config/" || { echo "rsync failed"; continue; }
+  # vendor/ travels with the repo: the autoresearch upstream is private and only the Mac can clone it
+  rsync -a --delete --exclude .DS_Store "$REPO/" "$h:claude-config/" || { echo "rsync failed"; continue; }
   ssh -o BatchMode=yes "$h" "bash ~/claude-config/install.sh ${FLAGS[*]:-}"
 done
