@@ -55,6 +55,7 @@ tomove=""
 for p in handoffs jobs tasks daemon daemon.log; do [ -e "$CL/$p" ] && tomove="$tomove $CL/$p"; done
 for p in "$CL"/downloads/* "$CL"/*.bak* "$CL"/*.pre-migrate "$CL"/CLAUDE.md.bak* "$CL"/settings.json.bak*; do [ -e "$p" ] && tomove="$tomove $p"; done
 codex=$(find "$CL" -maxdepth 3 -name '*.codex.*' -not -path "*/handoffs/*" 2>/dev/null); tomove="$tomove $codex"
+tomove="$(printf '%s\n' $tomove | sort -u | tr '\n' ' ')"
 if [ -n "$(echo $tomove)" ]; then
   for p in $tomove; do echo "   $(basename "$p")  $(bytes "$p")"; done
   if [ "$YES" = 1 ]; then
