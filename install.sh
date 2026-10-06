@@ -275,9 +275,12 @@ fi
 
 # ---------------------------------------------------------------- summary
 log "Summary on $(hostname) ($OS $ARCH)"
-have() {  # found and answers --version
+have() {  # found and runs (answers --version, -V or --help)
   if ! command -v "$1" >/dev/null 2>&1; then printf '  %-12s MISSING\n' "$1"; return; fi
-  if perl -e 'alarm 30; exec @ARGV' "$1" --version >/dev/null 2>&1; then printf '  %-12s %s\n' "$1" "$(command -v "$1")"; else printf '  %-12s BROKEN (%s)\n' "$1" "$(command -v "$1")"; fi
+  for flag in --version -V --help; do
+    perl -e 'alarm 30; exec @ARGV' "$1" "$flag" >/dev/null 2>&1 && { printf '  %-12s %s\n' "$1" "$(command -v "$1")"; return; }
+  done
+  printf '  %-12s BROKEN (%s)\n' "$1" "$(command -v "$1")"
 }
 have claude; have tmux; have jq; have uv; have tectonic; have resvg; have node; have trash
 if [ "$OS" = "Darwin" ]; then
