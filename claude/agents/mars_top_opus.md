@@ -1,6 +1,6 @@
 ---
 name: mars_top_opus
-description: Autoresearch top-tier worker on the opus tier (claude/models.json), full tools — same job as mars_top: design, tricky code or math, experiments that must execute and produce artifacts. Up to 6 autoresearch agents in parallel.
+description: Autoresearch top-tier worker on the opus tier (claude/models.json), full tools — every further concurrent cornerstone worker beyond the single mars_top (fable is scarce: at most one mars_top at a time; up to 6 Opus/Sonnet agents in parallel). Same job as mars_top: design, tricky code or math, experiments that must execute and produce artifacts.
 model: opus
 effort: {{opus.effort}}
 ---

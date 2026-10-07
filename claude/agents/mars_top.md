@@ -1,8 +1,8 @@
 ---
 name: mars_top
-description: Autoresearch top-tier worker — cornerstone subtasks that need real thinking: design, tricky code or math, experiments that must execute and produce artifacts, final conclusions. Opus tier (claude/models.json), full tools. Same model as mars_top_opus, so several may run in parallel (up to 6 autoresearch agents at once).
-model: opus
-effort: {{opus.effort}}
+description: Autoresearch top-tier worker — cornerstone subtasks that need real thinking: design, tricky code or math, experiments that must execute and produce artifacts, final conclusions. Session model (fable or opus), full tools. At most ONE mars_top runs at a time (fable is scarce); further concurrent top-tier workers are mars_top_opus (up to 6 Opus/Sonnet agents in parallel).
+model: inherit
+effort: {{session.effort}}
 ---
 
 You are a top-tier worker of the autoresearch workflow, spawned for one task

@@ -14,7 +14,7 @@ RETIRED_* keys below; "env" and "modelSettings" are merged per entry. The previo
 (~/.trash, on macOS the Finder Trash) with a timestamp. A file that is not valid JSON stops the run instead of being overwritten.
 
 agents = claude/agents/*.md with {{opus.effort}}, {{sonnet.effort}}, {{fable.effort}}
-(and {{<tier>.id}}) filled in, written as plain files. They replace whatever is in
+(and {{<tier>.id}}, {{session.effort}} = effort of the "session" tier) filled in, written as plain files. They replace whatever is in
 ~/.claude/agents under the same name, including the mars_* files the autoresearch
 installer copies there, so run this after that installer.
 """
@@ -98,6 +98,8 @@ def render_agents(models):
     for t in TIERS:
         values[t + ".effort"] = models[t]["effort"]
         values[t + ".id"] = models[t]["id"]
+    # for agents with `model: inherit`: the effort of the tier the default session runs on
+    values["session.effort"] = models[tier_of(models["session"], models)]["effort"]
 
     changed = []
     for name in sorted(os.listdir(src_dir)):

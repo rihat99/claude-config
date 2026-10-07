@@ -143,7 +143,7 @@ Pinned agents in `~/.claude/agents/`:
 - `worker` — opus tier, full tools. Real subtasks: design, tricky code, experiments that must produce artifacts.
 - `light` — sonnet tier. Mechanical work: digests, greps, summaries, format conversion.
 - `adversary` — opus tier at max effort, read-only. Independent criticism; it never edits.
-- `mars_*` — only inside the `autoresearch` workflow; all on the opus tier except `mars_light` (sonnet).
+- `mars_*` — only inside the `autoresearch` workflow. `mars_top` follows the session model, at most one at a time; `mars_top_opus` and `mars_aux` are opus tier; `mars_light` is sonnet.
 
 Rules:
 - Launch independent agents together in one message; up to 3–4 at once unless I say otherwise. One agent, one task. A fresh agent beats a stale one.
