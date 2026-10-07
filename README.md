@@ -9,10 +9,12 @@ claude/settings.json      permissions (auto mode + allow/ask/deny), status line,
 claude/settings.macos.json  extras only for the Mac (draw.io plugin)
 claude/statusline.sh      status bar: [Model · effort] ctx % tokens │ 5h % │ 7d %
 claude/keybindings.json   keyboard shortcuts
-claude/agents/            pinned subagents: worker (opus), light (sonnet), adversary (opus, max, read-only), mars_* (our copies, opus)
+claude/agents/            pinned subagents: worker (opus), light (sonnet), adversary (opus, max, read-only), mars_* (our copies: mars_top inherits the session model, mars_top_opus/mars_aux opus, mars_light sonnet)
+claude/autoresearch/      delegation.md: our rule that the autoresearch orchestrator hands shell and multi-file work to subagents
 claude/skills/            adversarial-review, explain-html, figure, latex-report, slides, cpp-standards, archify (vendored)
 bin/trash                 move files to <repo>/trash/ or ~/.trash/ instead of rm
 bin/render_config.py      writes ~/.claude/settings.json and ~/.claude/agents/*.md from the files above (run by install.sh)
+bin/patch_autoresearch.py inserts claude/autoresearch/delegation.md into the installed autoresearch SKILL.md and playbook (run by install.sh; upstream text untouched)
 tmux/tmux.conf            shared tmux config
 install.sh                link everything into ~/.claude, install user-local tools (and update Claude Code), install autoresearch
 sync.sh                   rsync this repo to the other machines (skips a host with its own edits) and run install.sh there

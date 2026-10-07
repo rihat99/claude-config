@@ -14,7 +14,8 @@
 #   ~/.local/bin/trash, ~/.trash/                          -> trash helper and folder (macOS: the Finder Trash)
 #   ~/.tmux.conf                                           -> symlink
 #   tools (user-local): uv + ~/.claude/venv, jq, tectonic, resvg, node (Linux), LibreOffice AppImage (Linux), Claude Code
-#   autoresearch skill from github.com/ramazan793/autoresearch_skill (vendor/, hooks merged into settings.json)
+#   autoresearch skill from github.com/ramazan793/autoresearch_skill (vendor/, hooks merged into settings.json),
+#     plus our delegation rule from claude/autoresearch/delegation.md (bin/patch_autoresearch.py)
 set -uo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CL="$HOME/.claude"
@@ -238,6 +239,8 @@ if [ "$DO_AUTORESEARCH" = 1 ]; then
     # their installer refuses a symlinked skill dir only if it is ours; it writes into ~/.claude/skills/autoresearch
     [ -L "$CL/skills/autoresearch" ] && rm -f "$CL/skills/autoresearch"
     bash "$REPO/vendor/autoresearch_skill/install.sh" >/dev/null 2>&1 && note "autoresearch installed (skill, hooks, mars_* agents)" || warn "autoresearch installer reported a problem"
+    # our delegation rule goes into the freshly copied SKILL.md and playbook (upstream text untouched)
+    python3 "$REPO/bin/patch_autoresearch.py" || warn "patch_autoresearch.py failed"
     # their installer backs settings.json up next to it; keep ~/.claude tidy
     for b in "$CL"/settings.json.bak.*; do [ -e "$b" ] && mv "$b" "$HT/" 2>/dev/null; done
     [ -f "$HOME/.config/autoresearch/telegram.env" ] && grep -q 'TG_BOT_TOKEN=$\|TG_BOT_TOKEN=""\|<' "$HOME/.config/autoresearch/telegram.env" 2>/dev/null && note "Telegram not configured: edit ~/.config/autoresearch/telegram.env"

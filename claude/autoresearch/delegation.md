@@ -1,0 +1,10 @@
+## Delegation (local rule)
+
+The main agent orchestrates and integrates; it does not run the work. Builds, test suites, benchmarks, training or evaluation runs, data conversion, GPU and environment checks, log digging, run→inspect→fix loops, multi-file reading, and edits across more than one or two files all go to subagents with a brief. The main agent keeps for itself: reading notes and briefs, the task's canonical files (`PLAN.md`, `STATE.md`, `REPORT.md`), spawning agents and reading their reports, reviewing what they return, and trivial one-liners (`ls`, `git status`, a small `cat`, a path check). Before a third Bash call in a row, or any command expected to run longer than a minute, stop and write a brief instead.
+
+- Shell work: one `mars_top` / `mars_top_opus` brief per unit of work. The agent runs it, iterates on failures, and returns ≤30 lines plus absolute paths to logs and artifacts. For a long job it stays alive to poll and report; the main agent does not sleep-and-check.
+- Code changes: assign the files to a `mars_top*` agent in its brief (the artifact contract's "ownership of specific files"). The main agent reviews the diff and integrates; it does not retype the edits.
+- Reading and searching: `mars_aux` for tracing and investigation, `mars_light` for mechanical digests and greps.
+- Reviews: `mars_aux` with a clean context, as the Verify section says.
+
+Why: the main agent runs on the most expensive model with the largest context, and every command output it reads stays in that context until the next compact, re-read on every later call. Subagents are cheaper, start fresh, and die when done.
