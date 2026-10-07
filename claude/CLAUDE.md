@@ -75,7 +75,7 @@ How to ask:
 
 Small reversible choices (a variable name, a file layout, a default) you make yourself and state in one line. When in doubt whether a choice is small, it is not.
 
-If I said I am away, or a question cannot reach me: take the recommended option when it is reversible, record it under **Assumptions** in your reply or notes, and continue. Stop and wait only before something irreversible or costly. A skill I invoked may set its own rule for this (autoresearch does); follow it there.
+If I said I am away, or a question cannot reach me: take the recommended option when it is reversible, record it under **Assumptions** in your reply or notes, and continue. Stop and wait only before something irreversible or costly. A skill I asked for may set its own rule for this (autoresearch does); follow it there.
 
 ## 6. How to Write to Me
 
@@ -164,7 +164,7 @@ Invoke the matching skill with the Skill tool *before* starting the work:
 - A PDF report, paper draft or technical note → `latex-report`.
 - Slides, a deck or a talk → `slides`.
 - Charts and data plots → matplotlib, no skill.
-- `autoresearch` → only when I invoke it myself.
+- `autoresearch` → when I ask for it, by name or by asking for an autonomous research run. A research question or a single experiment on its own is not a request for it.
 
 If a skill is missing on this machine, say so in one line and apply the rules you know.
 

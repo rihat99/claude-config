@@ -238,23 +238,6 @@ if [ "$DO_AUTORESEARCH" = 1 ]; then
     # their installer refuses a symlinked skill dir only if it is ours; it writes into ~/.claude/skills/autoresearch
     [ -L "$CL/skills/autoresearch" ] && rm -f "$CL/skills/autoresearch"
     bash "$REPO/vendor/autoresearch_skill/install.sh" >/dev/null 2>&1 && note "autoresearch installed (skill, hooks, mars_* agents)" || warn "autoresearch installer reported a problem"
-    # user-invoked only: never auto-triggered by the model
-    python3 - "$CL/skills/autoresearch/SKILL.md" <<'PY'
-import sys
-p = sys.argv[1]
-try:
-    lines = open(p).read().split("\n")
-except FileNotFoundError:
-    sys.exit(0)
-if any(l.startswith("disable-model-invocation:") for l in lines[:40]):
-    sys.exit(0)
-# insert before the closing '---' of the frontmatter
-idx = [i for i, l in enumerate(lines) if l.strip() == "---"]
-if len(idx) >= 2:
-    lines.insert(idx[1], "disable-model-invocation: true")
-    open(p, "w").write("\n".join(lines))
-    print("    autoresearch: marked user-invoked only")
-PY
     # their installer backs settings.json up next to it; keep ~/.claude tidy
     for b in "$CL"/settings.json.bak.*; do [ -e "$b" ] && mv "$b" "$HT/" 2>/dev/null; done
     [ -f "$HOME/.config/autoresearch/telegram.env" ] && grep -q 'TG_BOT_TOKEN=$\|TG_BOT_TOKEN=""\|<' "$HOME/.config/autoresearch/telegram.env" 2>/dev/null && note "Telegram not configured: edit ~/.config/autoresearch/telegram.env"
