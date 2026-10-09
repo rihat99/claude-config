@@ -160,6 +160,7 @@ Invoke the matching skill with the Skill tool *before* starting the work:
 - Important code, result, plan or conclusion → `adversarial-review` (main session only, or when I type `/adversarial-review`).
 - A static diagram, schematic or figure for a paper, README, poster or slides → `figure` (SVG). draw.io only when I say draw.io.
 - An interactive HTML map of a system, flow or sequence → `archify`, only when I ask for one.
+- Explainer pages for research papers (one or more PDFs) → `better-paper`, only when I ask for pages.
 - A web page or explainer I can open in a browser → `explain-html`, only when I ask for one; otherwise answer in chat.
 - A PDF report, paper draft or technical note → `latex-report`.
 - Slides, a deck or a talk → `slides`.

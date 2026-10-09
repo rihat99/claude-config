@@ -20,6 +20,7 @@ install.sh                link everything into ~/.claude, install user-local too
 sync.sh                   rsync this repo to the other machines (skips a host with its own edits) and run install.sh there
 cleanup.sh                move leftovers (handoffs, downloads, backup files) to the trash; never deletes
 vendor/                   (gitignored) autoresearch_skill clone; the upstream repo is private, so the Mac clones it and sync.sh copies it along
+vendor/BetterPaper/       (gitignored) the better-paper skill (paper explainer pages), cloned from github.com/rihat99/BetterPaper and linked as ~/.claude/skills/better-paper
 ```
 
 ## Daily use
@@ -32,6 +33,15 @@ bash sync.sh                                                         # push to e
 ```
 
 `install.sh` symlinks CLAUDE.md, skills, statusline and tmux.conf into `~/.claude`, so on the Mac an edit here is live immediately. `settings.json` and the agents are *written* (settings.json because Claude Code rewrites it, agents because their effort comes from models.json), so run `bash install.sh --no-tools` after changing `settings.json`, `models.json` or anything in `agents/`.
+
+## The better-paper skill
+
+It lives in its own repo, `~/Desktop/projects/BetterPaper` on the Mac (GitHub: rihat99/BetterPaper). To ship a change:
+
+```bash
+cd ~/Desktop/projects/BetterPaper && git commit -am "what changed" && git push
+cd ~/claude-config && bash install.sh --no-tools && bash sync.sh --no-tools    # the Mac pulls it into vendor/, sync copies it on
+```
 
 ## Models
 

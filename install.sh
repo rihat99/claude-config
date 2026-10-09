@@ -10,6 +10,7 @@
 #   ~/.claude/CLAUDE.md, statusline.sh, keybindings.json  -> symlinks into this repo
 #   ~/.claude/settings.json                                -> claude/settings.json (+ settings.macos.json on a Mac) + model keys from claude/models.json
 #   ~/.claude/skills/<name>                                -> symlinks into this repo
+#   ~/.claude/skills/better-paper                          -> vendor/BetterPaper (github.com/rihat99/BetterPaper, public)
 #   ~/.claude/agents/<name>.md                             -> claude/agents/*.md with the effort from claude/models.json filled in
 #   ~/.local/bin/trash, ~/.trash/                          -> trash helper and folder (macOS: the Finder Trash)
 #   ~/.tmux.conf                                           -> symlink
@@ -85,6 +86,15 @@ for d in "$REPO"/claude/skills/*/; do
   n="$(basename "$d")"
   link "${d%/}" "$CL/skills/$n"
 done
+# better-paper lives in its own repo. The Mac clones/updates it; sync.sh copies vendor/ to the other machines.
+BP="$REPO/vendor/BetterPaper"
+if [ -d "$BP/.git" ]; then
+  [ "$OS" = "Darwin" ] && { git -C "$BP" pull -q --ff-only 2>/dev/null || warn "could not update BetterPaper (offline?)"; }
+else
+  mkdir -p "$REPO/vendor"
+  GIT_TERMINAL_PROMPT=0 git clone -q https://github.com/rihat99/BetterPaper.git "$BP" 2>/dev/null || warn "could not clone BetterPaper"
+fi
+[ -f "$BP/SKILL.md" ] && link "$BP" "$CL/skills/better-paper"
 # drop symlinks that point into this repo but whose target is gone
 for p in "$CL"/skills/*; do
   [ -L "$p" ] || continue
