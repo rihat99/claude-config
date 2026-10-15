@@ -118,7 +118,8 @@
       "Bash(tmux list-*)",
       "Bash(tmux capture-pane *)",
       "Bash(tmux has-session *)",
-      "Bash(kill *)"
+      "Bash(kill *)",
+      "Bash(pkill *)"
     ],
     "ask": [
       "Bash(rm *)",
@@ -139,9 +140,6 @@
       "Bash(git stash clear*)",
       "Bash(git branch -D *)",
       "Bash(git rebase *)",
-      "Bash(kill -9 *)",
-      "Bash(kill -KILL *)",
-      "Bash(pkill *)",
       "Bash(killall *)",
       "Bash(rsync *--del*)",
       "Bash(rsync *--remove-source-files*)",
