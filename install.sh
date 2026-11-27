@@ -2,30 +2,26 @@
 # Install or refresh the shared Claude Code configuration on this machine.
 # Idempotent: safe to run again at any time. Works on macOS and Linux, no sudo.
 #
-#   bash install.sh                 # everything: config links, tools, autoresearch
+#   bash install.sh                 # everything: config links and tools
 #   bash install.sh --no-tools      # only config links (fast)
-#   bash install.sh --no-autoresearch
 #
 # What it does
 #   ~/.claude/CLAUDE.md, statusline.sh, keybindings.json  -> symlinks into this repo
-#   ~/.claude/settings.json                                -> claude/settings.json (+ settings.macos.json on a Mac) + model keys from claude/models.json
+#   ~/.claude/settings.json                                -> claude/settings.json (+ settings.macos.json on a Mac) + model keys from claude/models.json;
+#                                                             its hooks run files of the self-compact and autoresearch skills
 #   ~/.claude/skills/<name>                                -> symlinks into this repo
-#   ~/.claude/skills/better-paper                          -> vendor/BetterPaper (github.com/rihat99/BetterPaper, public)
 #   ~/.claude/agents/<name>.md                             -> claude/agents/*.md with the effort from claude/models.json filled in
 #   ~/.local/bin/trash, ~/.trash/                          -> trash helper and folder (macOS: the Finder Trash)
 #   ~/.tmux.conf                                           -> symlink
 #   tools (user-local): uv + ~/.claude/venv, jq, tectonic, resvg, node (Linux), LibreOffice AppImage (Linux), Claude Code
-#   autoresearch skill from github.com/ramazan793/autoresearch_skill (vendor/, hooks merged into settings.json),
-#     plus our delegation rule from claude/autoresearch/delegation.md (bin/patch_autoresearch.py)
 set -uo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CL="$HOME/.claude"
 OS="$(uname -s)"; ARCH="$(uname -m)"
-DO_TOOLS=1; DO_AUTORESEARCH=1
+DO_TOOLS=1
 for a in "$@"; do
   case "$a" in
     --no-tools) DO_TOOLS=0 ;;
-    --no-autoresearch) DO_AUTORESEARCH=0 ;;
     -h|--help) awk 'NR>1 && /^#/ {sub(/^# ?/, ""); print} NR>1 && !/^#/ {exit}' "$0"; exit 0 ;;
     *) echo "unknown flag $a (see --help)" >&2; exit 2 ;;
   esac
@@ -86,15 +82,6 @@ for d in "$REPO"/claude/skills/*/; do
   n="$(basename "$d")"
   link "${d%/}" "$CL/skills/$n"
 done
-# better-paper lives in its own repo. The Mac clones/updates it; sync.sh copies vendor/ to the other machines.
-BP="$REPO/vendor/BetterPaper"
-if [ -d "$BP/.git" ]; then
-  [ "$OS" = "Darwin" ] && { git -C "$BP" pull -q --ff-only 2>/dev/null || warn "could not update BetterPaper (offline?)"; }
-else
-  mkdir -p "$REPO/vendor"
-  GIT_TERMINAL_PROMPT=0 git clone -q https://github.com/rihat99/BetterPaper.git "$BP" 2>/dev/null || warn "could not clone BetterPaper"
-fi
-[ -f "$BP/SKILL.md" ] && link "$BP" "$CL/skills/better-paper"
 # drop symlinks that point into this repo but whose target is gone
 for p in "$CL"/skills/*; do
   [ -L "$p" ] || continue
@@ -234,32 +221,7 @@ if [ "$DO_TOOLS" = 1 ]; then
   fi
 fi
 
-# ---------------------------------------------------------------- autoresearch
-if [ "$DO_AUTORESEARCH" = 1 ]; then
-  log "Autoresearch skill"
-  # The upstream repo is private. The Mac clones/updates it; sync.sh copies vendor/ to the other machines.
-  mkdir -p "$REPO/vendor"
-  if [ -d "$REPO/vendor/autoresearch_skill/.git" ]; then
-    [ "$OS" = "Darwin" ] && { git -C "$REPO/vendor/autoresearch_skill" pull -q --ff-only 2>/dev/null || warn "could not update autoresearch (offline or no GitHub access)"; }
-  else
-    GIT_TERMINAL_PROMPT=0 git clone -q https://github.com/ramazan793/autoresearch_skill.git "$REPO/vendor/autoresearch_skill" 2>/dev/null \
-      || warn "could not clone autoresearch (private repo; run sync.sh from the Mac to copy it)"
-  fi
-  if [ -f "$REPO/vendor/autoresearch_skill/install.sh" ]; then
-    # their installer refuses a symlinked skill dir only if it is ours; it writes into ~/.claude/skills/autoresearch
-    [ -L "$CL/skills/autoresearch" ] && rm -f "$CL/skills/autoresearch"
-    bash "$REPO/vendor/autoresearch_skill/install.sh" >/dev/null 2>&1 && note "autoresearch installed (skill, hooks, mars_* agents)" || warn "autoresearch installer reported a problem"
-    # our delegation rule goes into the freshly copied SKILL.md and playbook (upstream text untouched)
-    python3 "$REPO/bin/patch_autoresearch.py" || warn "patch_autoresearch.py failed"
-    # their installer backs settings.json up next to it; keep ~/.claude tidy
-    for b in "$CL"/settings.json.bak.*; do [ -e "$b" ] && mv "$b" "$HT/" 2>/dev/null; done
-    [ -f "$HOME/.config/autoresearch/telegram.env" ] && grep -q 'TG_BOT_TOKEN=$\|TG_BOT_TOKEN=""\|<' "$HOME/.config/autoresearch/telegram.env" 2>/dev/null && note "Telegram not configured: edit ~/.config/autoresearch/telegram.env"
-  fi
-fi
-
 # ---------------------------------------------------------------- settings.json and agents
-# After autoresearch on purpose: its installer copies mars_*.md into ~/.claude/agents and merges its
-# hooks into settings.json; render_config.py then writes our versions (model tiers from claude/models.json).
 log "settings.json and agents (claude/models.json)"
 python3 "$REPO/bin/render_config.py" || warn "render_config.py failed"
 # a skill or agent with broken frontmatter is ignored silently by Claude Code; say so here instead

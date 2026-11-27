@@ -115,5 +115,50 @@
   "skipAutoPermissionPrompt": true,
   "agentPushNotifEnabled": true,
   "autoUpdatesChannel": "stable",
-  "cleanupPeriodDays": 90
+  "cleanupPeriodDays": 90,
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOME/.claude/skills/self-compact/hooks/deliver.py",
+            "timeout": 60
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOME/.claude/skills/autoresearch/hooks/context_watch.py",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOME/.claude/skills/autoresearch/hooks/context_watch.py",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $HOME/.claude/skills/autoresearch/hooks/post_compact_state.py",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
 }

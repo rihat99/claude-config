@@ -8,15 +8,16 @@ claude/models.json is the single place where model versions live:
 
 settings.json = the existing ~/.claude/settings.json with every key from
 claude/settings.json (+ claude/settings.macos.json on a Mac) and the model keys derived
-from models.json written over it. Keys the repo does not define (hooks from the
-autoresearch installer, choices Claude Code saves at runtime) stay as they are, except the
-RETIRED_* keys below; "env" and "modelSettings" are merged per entry. The previous file is kept in the home trash
+from models.json written over it. Keys the repo does not define (choices Claude Code saves
+at runtime) stay as they are, except the RETIRED_* keys below; "env" and "modelSettings" are
+merged per entry. "hooks" are merged per event: a hook whose command runs a file under
+~/.claude/skills/ belongs to this repo and is replaced by the repo's list, any other hook
+(one a terminal app added on this machine) is kept. The previous file is kept in the home trash
 (~/.trash, on macOS the Finder Trash) with a timestamp. A file that is not valid JSON stops the run instead of being overwritten.
 
 agents = claude/agents/*.md with {{opus.effort}}, {{sonnet.effort}}, {{fable.effort}}
 (and {{<tier>.id}}, {{session.effort}} = effort of the "session" tier) filled in, written as plain files. They replace whatever is in
-~/.claude/agents under the same name, including the mars_* files the autoresearch
-installer copies there, so run this after that installer.
+~/.claude/agents under the same name.
 """
 import json
 import os
@@ -32,6 +33,18 @@ TIERS = ("fable", "opus", "sonnet")
 RETIRED_KEYS = ("skipDangerousModePermissionPrompt", "skipWorkflowUsageWarning")
 RETIRED_ENV = ("CLAUDE_AFK_TIMEOUT_MS",)
 EFFORTS = ("low", "medium", "high", "xhigh")  # max is per session only, not a tier default
+SKILL_HOOK = "/.claude/skills/"  # a hook command with this path is ours, whatever version wrote it
+
+
+def merge_hooks(old, repo):
+    """Per event: the machine's own hook groups, then the repo's. Empty events are dropped."""
+    merged = {}
+    for event in list(old) + [e for e in repo if e not in old]:
+        local = [g for g in old.get(event, []) if SKILL_HOOK not in json.dumps(g)]
+        groups = local + repo.get(event, [])
+        if groups:
+            merged[event] = groups
+    return merged
 
 
 def tier_of(alias, models):
@@ -68,6 +81,7 @@ def render_settings(models):
         new.pop(k, None)
     new.update(repo)
     new["env"] = dict(old.get("env", {}), **repo_env)
+    new["hooks"] = merge_hooks(old.get("hooks", {}), repo.get("hooks", {}))
     for k in RETIRED_ENV:
         new["env"].pop(k, None)
     new["modelSettings"] = dict(old.get("modelSettings", {}))

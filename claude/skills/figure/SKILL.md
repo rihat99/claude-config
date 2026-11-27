@@ -1,6 +1,6 @@
 ---
 name: figure
-description: Draw a static figure or schematic (method overview, pipeline, block diagram, timeline, comparison, teaser) as clean hand-written SVG; render it to PNG/PDF and inspect the result. Use when the user asks for a figure, schematic, diagram, illustration or sketch as an image for a paper, slides, README, poster or report. Not for data plots (matplotlib), not for interactive HTML maps (archify), and not when the user says draw.io (the drawio skill, where installed).
+description: Draw a static figure or schematic (method overview, pipeline, block diagram, timeline, comparison, teaser) as clean hand-written SVG; render it to PNG/PDF and inspect the result. Use when the user asks for a figure, schematic, diagram, illustration or sketch as an image for a paper, slides, README, poster or report. Not for data plots (matplotlib), and not when the user says draw.io (the drawio skill, where installed).
 ---
 
 # Figures: minimal, elegant, verified

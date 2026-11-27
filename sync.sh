@@ -4,7 +4,7 @@
 #
 #   bash sync.sh                 # all hosts
 #   bash sync.sh robotics2       # one or more hosts
-#   bash sync.sh --no-tools ...  # pass install.sh flags (--no-tools, --no-autoresearch)
+#   bash sync.sh --no-tools ...  # pass install.sh --no-tools
 #   bash sync.sh --force ...     # overwrite a remote copy that has its own edits or commits
 #
 # A host whose ~/claude-config has uncommitted edits, or commits this copy does not have, is
@@ -17,7 +17,7 @@ HOSTS=(); FLAGS=(); FORCE=0
 for a in "$@"; do
   case "$a" in
     --force) FORCE=1 ;;
-    --no-tools|--no-autoresearch) FLAGS+=("$a") ;;
+    --no-tools) FLAGS+=("$a") ;;
     -*) echo "unknown flag $a" >&2; exit 2 ;;
     *) HOSTS+=("$a") ;;
   esac
@@ -41,7 +41,6 @@ for h in "${HOSTS[@]}"; do
       echo "skipped: $h has commits this copy does not have ($rhead); copy them back here, or --force"; continue
     fi
   fi
-  # vendor/ travels with the repo: the autoresearch upstream is private and only the Mac can clone it
   rsync -a --delete --exclude .DS_Store --exclude /trash/ "$REPO/" "$h:claude-config/" || { echo "rsync failed"; continue; }
   ssh -o BatchMode=yes "$h" "bash ~/claude-config/install.sh ${FLAGS[*]:-}"
 done

@@ -160,12 +160,12 @@ Invoke the matching skill with the Skill tool *before* starting the work:
 - Something is broken and the cause is not known: a bug, a failing or flaky test, a crash, NaN, a CUDA error, a slowdown → `debugging`, then `code` for the fix.
 - Important code, result, plan or conclusion → `adversarial-review` (main session only, or when I type `/adversarial-review`).
 - A static diagram, schematic or figure for a paper, README, poster or slides → `figure` (SVG). draw.io only when I say draw.io.
-- An interactive HTML map of a system, flow or sequence → `archify`, only when I ask for one.
-- Explainer pages for research papers (one or more PDFs) → `better-paper`, only when I ask for pages.
+- Explainer pages for research papers (one or more PDFs) → `explain-paper`, only when I ask for pages.
 - A web page or explainer I can open in a browser → `explain-html`, only when I ask for one; otherwise answer in chat.
 - A PDF report, paper draft or technical note → `latex-report`.
 - Slides, a deck or a talk → `slides`.
 - Charts and data plots → matplotlib, no skill.
+- I ask you to compact yourself, or to compact and continue → `self-compact`. Never start a compact on your own outside `autoresearch`.
 - `autoresearch` → when I ask for it, by name or by asking for an autonomous research run. A research question or a single experiment on its own is not a request for it.
 
 If a skill is missing on this machine, say so in one line and apply the rules you know.

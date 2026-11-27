@@ -5,7 +5,7 @@ My Claude Code setup, kept in one place and copied to every machine I work on: t
 ## What it gives me
 
 - **One set of working rules.** [`claude/CLAUDE.md`](claude/CLAUDE.md) tells Claude how to think before coding, keep changes small, ask before deciding things that are mine to decide, and write replies I can read on a phone.
-- **Skills for the work I repeat.** Coding to my principles, debugging, reviews, figures, reports, slides, paper explainers.
+- **Skills for the work I repeat.** Coding to my principles, debugging, reviews, figures, reports, slides, paper explainers, autonomous research runs.
 - **Fixed models.** `opus` means the same version on every machine, and helper agents run on a tier I chose.
 - **No permission prompts for everyday work.** Listed commands run at once; everything else is judged by Claude Code's auto mode.
 - **Trash by default.** Claude moves files to a trash folder with `trash` and keeps `rm` for things not worth keeping.
@@ -39,7 +39,7 @@ git commit -am "what changed" && git push         # keep the history
 bash sync.sh --no-tools                           # send it to the other machines
 ```
 
-`CLAUDE.md`, the skills, the status line and `tmux.conf` are links into this folder, so on the Mac an edit is live at once. `settings.json` and the agents are written out by `install.sh`, so they need the first command. A Claude session that is already open picks up new settings after a restart.
+`CLAUDE.md`, the skills, the status line and `tmux.conf` are links into this folder, so on the Mac an edit is live at once. `settings.json` (permissions and hooks) and the agents are written out by `install.sh`, so they need the first command. A Claude session that is already open picks up new settings after a restart.
 
 `sync.sh` skips a machine whose copy has its own edits or commits, so nothing is lost; bring those changes back here first, or pass `--force` to overwrite them.
 
@@ -56,11 +56,13 @@ A skill is a set of instructions Claude loads only when the task calls for it.
 | `latex-report` | a PDF report or paper draft. |
 | `slides` | a slide deck (.pptx). |
 | `explain-html` | a web page that explains something. |
-| `archify` | an interactive HTML diagram of a system (vendored from its upstream). |
-| `better-paper` | explainer pages for research papers. Lives in its own repo, see below. |
-| `autoresearch` | an autonomous research run. Installed from a colleague's private repo, with one local addition. |
+| `explain-paper` | explainer pages for research papers, one page per paper plus an index for a collection. |
+| `self-compact` | "compact yourself": Claude types `/compact` into its own terminal. Works inside tmux or in a background session; elsewhere Claude prints the line for me to paste. |
+| `autoresearch` | an autonomous research run: intake interview, notes per task, helper agents, GPU picking, compacting by itself at task boundaries. |
 
 The principle chapters live in [`claude/skills/code/references/`](claude/skills/code/references/). This is their home: edit them here. Ideas borrowed from other people's skills (ponytail, mattpocock/skills, superpowers) are in `code/SKILL.md` and `debugging/SKILL.md`; the chapters are mine.
+
+`autoresearch` started as a copy of a colleague's skill (ramazan793/autoresearch_skill) and is now kept here: it no longer follows that repo, has no Telegram notifications, and its compact mechanism moved into `self-compact`. Two of its files run as hooks, registered in `claude/settings.json`: one warns Claude when the context of a research session grows past 350k tokens, the other puts the task's `STATE.md` back after a compact. `self-compact` adds a third hook that types the queued `/compact` line.
 
 ## The helper agents
 
@@ -109,18 +111,8 @@ On the Mac `~/.trash` is the Finder Trash, which Finder empties after 30 days. A
 ## What differs per machine
 
 - **Login**: once per machine.
-- **Telegram for autoresearch**: `~/.config/autoresearch/telegram.env`, entered by hand, never synced.
 - **Tools**: `install.sh` installs what the skills need for the current user: `uv` and a small Python environment, `jq`, `tectonic` (LaTeX), `resvg` (SVG to PNG), `node` and LibreOffice on Linux. On the Mac slides render through PowerPoint. Web pages are screenshotted only where Chrome exists: the Mac, rikhat_ws and robotics1.
 - **Mac only**: the draw.io plugin (`claude/settings.macos.json`).
-
-## The better-paper skill
-
-It has its own repo, `~/Desktop/projects/BetterPaper` (GitHub: rihat99/BetterPaper). To ship a change:
-
-```bash
-cd ~/Desktop/projects/BetterPaper && git commit -am "what changed" && git push
-cd ~/claude-config && bash install.sh --no-tools && bash sync.sh --no-tools
-```
 
 ## Housekeeping
 
@@ -136,16 +128,14 @@ It only moves things to the trash and never touches chats.
 | Path | What it is |
 |---|---|
 | `claude/CLAUDE.md` | the global working rules |
-| `claude/settings.json` | permissions and other Claude Code settings; `settings.macos.json` adds the Mac-only part |
+| `claude/settings.json` | permissions, hooks and other Claude Code settings; `settings.macos.json` adds the Mac-only part |
 | `claude/models.json` | model versions and effort per tier |
 | `claude/agents/` | the helper agents |
 | `claude/skills/` | the skills kept in this repo |
-| `claude/autoresearch/delegation.md` | my addition to the autoresearch skill: the orchestrator hands shell and multi-file work to helpers |
 | `claude/statusline.sh` | the status bar: model, context used, 5-hour and 7-day usage |
 | `claude/keybindings.json` | keyboard shortcuts |
 | `tmux/tmux.conf` | shared tmux config |
 | `bin/trash` | the trash helper |
-| `bin/render_config.py` | writes `~/.claude/settings.json` and the agents from the files above |
-| `bin/patch_autoresearch.py` | inserts `delegation.md` into the installed autoresearch skill |
+| `bin/render_config.py` | writes `~/.claude/settings.json` and the agents from the files above; hooks another program added on a machine are kept |
 | `install.sh`, `sync.sh`, `cleanup.sh` | set up this machine, copy to the others, tidy up |
-| `vendor/` | not in git: the autoresearch and BetterPaper clones, copied along by `sync.sh` |
+| `tests/` | checks for the hooks: `bash tests/verify_self_compact.sh`, `python3 tests/test_autoresearch_hooks.py` |

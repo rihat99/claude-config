@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Fake tmux shim: logic-tests tmux_deliver.py WITHOUT touching real panes.
+# Logs each invocation to $FT_LOG; capture-pane returns the busy marker for
+# $FT_BUSY_CALLS consecutive calls starting at call number $FT_BUSY_FROM
+# (default 1; counter in $FT_STATE), an idle screen otherwise.
+LOG="${FT_LOG:?}"
+STATE="${FT_STATE:?}"
+BUSY_CALLS="${FT_BUSY_CALLS:-2}"
+BUSY_FROM="${FT_BUSY_FROM:-1}"
+printf '%s\n' "$@" >> "$LOG"; printf 'END\n' >> "$LOG"
+
+case "$1" in
+  display-message) echo "%99"; exit 0 ;;
+  capture-pane)
+    n=0; [ -f "$STATE" ] && n=$(cat "$STATE")
+    n=$((n + 1)); echo "$n" > "$STATE"
+    if [ "$n" -ge "$BUSY_FROM" ] && [ "$n" -lt $((BUSY_FROM + BUSY_CALLS)) ]; then
+      printf '\xe2\x9c\xbd Wrangling\xe2\x80\xa6 (3s \xc2\xb7 24 tokens)\n'
+    else echo "idle prompt ready"; fi
+    exit 0 ;;
+  send-keys) exit 0 ;;
+  new-window) echo "%77"; exit 0 ;;
+  *) exit 0 ;;
+esac

@@ -1,6 +1,6 @@
 ---
 name: explain-html
-description: Build a single-file HTML page that explains a topic, a codebase, a method, results or a plan with a clear narrative, minimal design, inline SVG figures and light/dark support, then render it and look at it. Use only when the user asks for a web page, an HTML explainer, an interactive page, or "something I can open in a browser"; a question or a write-up without those words is answered in chat or as a latex-report. For a standalone interactive system map use archify; for slides use slides.
+description: Build a single-file HTML page that explains a topic, a codebase, a method, results or a plan with a clear narrative, minimal design, inline SVG figures and light/dark support, then render it and look at it. Use only when the user asks for a web page, an HTML explainer, an interactive page, or "something I can open in a browser"; a question or a write-up without those words is answered in chat or as a latex-report. For slides use slides.
 ---
 
 # Explain as an HTML page
@@ -33,7 +33,6 @@ Start from `templates/page.html`; it already encodes these rules.
 ## 3. Figures
 
 - Draw figures as inline SVG following the `figure` skill (few elements, grid-aligned, labels inside shapes, one accent), but take ink and fills from the page's CSS variables (`stroke="currentColor"`, `fill="var(--surface)"`) so they stay visible in dark mode.
-- For a real system / data-flow / sequence map, build it with the `archify` skill and link to its HTML file from the page (the page itself stays a single file).
 - Data plots: render with matplotlib (the `~/.claude/venv/bin/python` env has it) to PNG at 2x, or write the chart as SVG by hand when it has fewer than ~30 points. Match the page's font and accent.
 
 ## 4. Build
