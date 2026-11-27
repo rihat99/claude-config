@@ -29,7 +29,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CL = os.path.expanduser("~/.claude")
 TIERS = ("fable", "opus", "sonnet")
 # keys the repo once set and later dropped: removed from the live file (everything else it does not define is kept)
-RETIRED_KEYS = ("skipDangerousModePermissionPrompt",)
+RETIRED_KEYS = ("skipDangerousModePermissionPrompt", "skipWorkflowUsageWarning")
 RETIRED_ENV = ("CLAUDE_AFK_TIMEOUT_MS",)
 EFFORTS = ("low", "medium", "high", "xhigh")  # max is per session only, not a tier default
 

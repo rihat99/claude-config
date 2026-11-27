@@ -80,7 +80,7 @@ chmod +x "$REPO/claude/statusline.sh" "$REPO/bin/trash"
 
 # ---------------------------------------------------------------- skills and agents
 log "Skills"
-RETIRED_SKILLS="codex-adversary diataxis-docs sphinx-docs write-tests design-principles file-naming python-standards subagent-orchestration"
+RETIRED_SKILLS="codex-adversary diataxis-docs sphinx-docs write-tests design-principles file-naming python-standards subagent-orchestration cpp-standards"
 for s in $RETIRED_SKILLS; do [ -e "$CL/skills/$s" ] && stash "$CL/skills/$s"; done
 for d in "$REPO"/claude/skills/*/; do
   n="$(basename "$d")"
@@ -262,6 +262,12 @@ fi
 # hooks into settings.json; render_config.py then writes our versions (model tiers from claude/models.json).
 log "settings.json and agents (claude/models.json)"
 python3 "$REPO/bin/render_config.py" || warn "render_config.py failed"
+# a skill or agent with broken frontmatter is ignored silently by Claude Code; say so here instead
+if command -v claude >/dev/null 2>&1; then
+  for kind in skills agents; do
+    claude plugin validate "$CL/$kind" >/dev/null 2>&1 || warn "claude plugin validate ~/.claude/$kind reports problems; run it to see them"
+  done
+fi
 
 # ---------------------------------------------------------------- git identity
 if command -v git >/dev/null 2>&1 && [ -z "$(git config --global user.email 2>/dev/null)" ]; then

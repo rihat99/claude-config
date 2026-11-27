@@ -59,7 +59,7 @@ For multi-step tasks, state a brief plan:
 3. [Step] → verify: [check]
 ```
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification. Report what you verified and what you did not. Never claim success you have not seen.
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification. Report what you verified and what you did not. A claim that something works, passes or is fixed carries the command that shows it, run after the last edit, and its output line; for an agent's work that means the diff and a rerun, not the agent's report.
 
 ## 5. Ask Before Deciding
 
@@ -129,7 +129,7 @@ Files and modules:
 - Public API modules: plain descriptive names a library user expects (`robot.py`, `inverse_kinematics.py`).
 - One main class per file.
 
-C++ / CUDA: invoke the `cpp-standards` skill before editing `.cpp`, `.h`, `.cu`, `.cuh`.
+The lines above are the short form. The full principles (ten laws, twelve chapters, C++/CUDA rules) are the `code` skill; §11 says when to invoke it.
 
 ## 10. Delegation and Verification
 
@@ -140,7 +140,7 @@ Subagents other than forks never see this conversation. Every delegation prompt 
 Models come in three tiers, `fable`, `opus` and `sonnet`. The exact version and effort of each tier live in one file, `~/claude-config/claude/models.json`; never hard-code a model id anywhere else. Subagents run on the `opus` tier by default, whatever model this session runs on (forks and the built-in Plan agent follow the session model). Use `sonnet` only for trivial mechanical work. Prefer `worker` to the built-in general-purpose agent: `worker` pins its effort, general-purpose inherits the session's. Never pass `model:` when spawning an agent unless I ask.
 
 Pinned agents in `~/.claude/agents/`:
-- `worker` — opus tier, full tools. Real subtasks: design, tricky code, experiments that must produce artifacts.
+- `worker` — opus tier, full tools except spawning agents. Real subtasks: design, tricky code, experiments that must produce artifacts.
 - `light` — sonnet tier. Mechanical work: digests, greps, summaries, format conversion.
 - `adversary` — opus tier at max effort, read-only. Independent criticism; it never edits.
 - `mars_*` — only inside the `autoresearch` workflow. `mars_top` follows the session model, at most one at a time; `mars_top_opus` and `mars_aux` are opus tier; `mars_light` is sonnet.
@@ -156,7 +156,8 @@ Rules:
 
 Invoke the matching skill with the Skill tool *before* starting the work:
 
-- C++ or CUDA files → `cpp-standards`.
+- Writing, changing or reviewing code beyond a one-line edit, in any language (C++ and CUDA included) → `code`.
+- Something is broken and the cause is not known: a bug, a failing or flaky test, a crash, NaN, a CUDA error, a slowdown → `debugging`, then `code` for the fix.
 - Important code, result, plan or conclusion → `adversarial-review` (main session only, or when I type `/adversarial-review`).
 - A static diagram, schematic or figure for a paper, README, poster or slides → `figure` (SVG). draw.io only when I say draw.io.
 - An interactive HTML map of a system, flow or sequence → `archify`, only when I ask for one.

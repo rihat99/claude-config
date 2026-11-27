@@ -1,51 +1,81 @@
 # claude-config
 
-One Claude Code setup for every machine: Mac, rikhat_ws, robotics1, robotics2, robotics3, robomed4.
+My Claude Code setup, kept in one place and copied to every machine I work on: the Mac, rikhat_ws, robotics1, robotics2, robotics3 and robomed4. Claude follows the same rules, has the same skills and asks for the same permissions wherever I open it.
 
-```
-claude/CLAUDE.md          global rules (how to think, write, ask, delete, code, delegate)
-claude/models.json        the three model tiers (fable / opus / sonnet): exact version + effort, session default, subagent default
-claude/settings.json      permissions (auto mode + allow/ask/deny), status line, env; model keys are added from models.json
-claude/settings.macos.json  extras only for the Mac (draw.io plugin)
-claude/statusline.sh      status bar: [Model · effort] ctx % tokens │ 5h % │ 7d %
-claude/keybindings.json   keyboard shortcuts
-claude/agents/            pinned subagents: worker (opus), light (sonnet), adversary (opus, max, read-only), mars_* (our copies: mars_top inherits the session model, mars_top_opus/mars_aux opus, mars_light sonnet)
-claude/autoresearch/      delegation.md: our rule that the autoresearch orchestrator hands shell and multi-file work to subagents
-claude/skills/            adversarial-review, explain-html, figure, latex-report, slides, cpp-standards, archify (vendored)
-bin/trash                 move files to <repo>/trash/ or ~/.trash/ instead of rm
-bin/render_config.py      writes ~/.claude/settings.json and ~/.claude/agents/*.md from the files above (run by install.sh)
-bin/patch_autoresearch.py inserts claude/autoresearch/delegation.md into the installed autoresearch SKILL.md and playbook (run by install.sh; upstream text untouched)
-tmux/tmux.conf            shared tmux config
-install.sh                link everything into ~/.claude, install user-local tools (and update Claude Code), install autoresearch
-sync.sh                   rsync this repo to the other machines (skips a host with its own edits) and run install.sh there
-cleanup.sh                move leftovers (handoffs, downloads, backup files) to the trash; never deletes
-vendor/                   (gitignored) autoresearch_skill clone; the upstream repo is private, so the Mac clones it and sync.sh copies it along
-vendor/BetterPaper/       (gitignored) the better-paper skill (paper explainer pages), cloned from github.com/rihat99/BetterPaper and linked as ~/.claude/skills/better-paper
+## What it gives me
+
+- **One set of working rules.** [`claude/CLAUDE.md`](claude/CLAUDE.md) tells Claude how to think before coding, keep changes small, ask before deciding things that are mine to decide, and write replies I can read on a phone.
+- **Skills for the work I repeat.** Coding to my principles, debugging, reviews, figures, reports, slides, paper explainers.
+- **Fixed models.** `opus` means the same version on every machine, and helper agents run on a tier I chose.
+- **Fewer permission prompts, safely.** Everyday commands run without asking. Deleting asks first. `sudo` and force-push are blocked.
+- **Nothing is deleted.** Claude moves files to a trash folder with `trash` and never runs `rm` on its own.
+
+## Set it up
+
+On the Mac (the machine that holds the GitHub login):
+
+```bash
+git clone git@github.com:rihat99/claude-config.git ~/claude-config
+cd ~/claude-config && bash install.sh
 ```
 
-## Daily use
+Every other machine gets it from the Mac, since they have no GitHub login:
+
+```bash
+bash sync.sh                 # all machines
+bash sync.sh robotics3       # one machine
+```
+
+Then run `claude` once on a new machine and log in. `install.sh` is safe to run again at any time and needs no `sudo`.
+
+## Change something
 
 Edit a file here, then:
 
 ```bash
-cd ~/claude-config && git commit -am "what changed" && git push     # history on GitHub
-bash sync.sh                                                         # push to every machine
+cd ~/claude-config
+bash install.sh --no-tools                        # apply on this machine (seconds)
+git commit -am "what changed" && git push         # keep the history
+bash sync.sh --no-tools                           # send it to the other machines
 ```
 
-`install.sh` symlinks CLAUDE.md, skills, statusline and tmux.conf into `~/.claude`, so on the Mac an edit here is live immediately. `settings.json` and the agents are *written* (settings.json because Claude Code rewrites it, agents because their effort comes from models.json), so run `bash install.sh --no-tools` after changing `settings.json`, `models.json` or anything in `agents/`.
+`CLAUDE.md`, the skills, the status line and `tmux.conf` are links into this folder, so on the Mac an edit is live at once. `settings.json` and the agents are written out by `install.sh`, so they need the first command. A Claude session that is already open picks up new settings after a restart.
 
-## The better-paper skill
+`sync.sh` skips a machine whose copy has its own edits or commits, so nothing is lost; bring those changes back here first, or pass `--force` to overwrite them.
 
-It lives in its own repo, `~/Desktop/projects/BetterPaper` on the Mac (GitHub: rihat99/BetterPaper). To ship a change:
+## The skills
 
-```bash
-cd ~/Desktop/projects/BetterPaper && git commit -am "what changed" && git push
-cd ~/claude-config && bash install.sh --no-tools && bash sync.sh --no-tools    # the Mac pulls it into vendor/, sync copies it on
-```
+A skill is a set of instructions Claude loads only when the task calls for it.
+
+| Skill | Claude uses it when I ask for |
+|---|---|
+| `code` | any real code change or code review. It carries my ten laws, twelve chapters of principles (architecture, API design, naming, code, determinism and performance, testing, docs, releases, repository layout, agent files, review, applications) and the C++/CUDA rules. |
+| `debugging` | something is broken and the cause is unknown: a bug, a flaky test, NaN, a CUDA error, a slowdown. |
+| `adversarial-review` | a second opinion on important code, numbers or conclusions, from a fresh agent that only reads. |
+| `figure` | a static figure or schematic as SVG. |
+| `latex-report` | a PDF report or paper draft. |
+| `slides` | a slide deck (.pptx). |
+| `explain-html` | a web page that explains something. |
+| `archify` | an interactive HTML diagram of a system (vendored from its upstream). |
+| `better-paper` | explainer pages for research papers. Lives in its own repo, see below. |
+| `autoresearch` | an autonomous research run. Installed from a colleague's private repo, with one local addition. |
+
+The principle chapters live in [`claude/skills/code/references/`](claude/skills/code/references/). This is their home: edit them here. Ideas borrowed from other people's skills (ponytail, mattpocock/skills, superpowers) are in `code/SKILL.md` and `debugging/SKILL.md`; the chapters are mine.
+
+## The helper agents
+
+Claude can hand part of a task to a helper with a clean context. The pinned ones:
+
+| Agent | Model tier | For |
+|---|---|---|
+| `worker` | opus | real subtasks: design, tricky code, experiments. It cannot start helpers of its own. |
+| `light` | sonnet | mechanical work: searching, summarising, converting. |
+| `adversary` | opus, maximum effort, read-only | independent criticism. |
+| `mars_*` | mixed | only inside `autoresearch`. |
 
 ## Models
 
-`claude/models.json`:
+[`claude/models.json`](claude/models.json) is the one place where model versions live:
 
 ```json
 {
@@ -57,37 +87,66 @@ cd ~/claude-config && bash install.sh --no-tools && bash sync.sh --no-tools    #
 }
 ```
 
-The aliases `fable`, `opus`, `sonnet` are pinned to these ids on every machine (`ANTHROPIC_DEFAULT_*_MODEL` in the settings env), so `/model opus` or `model: opus` in an agent always means the same version. Without the pin the alias can differ per machine (robotics2 resolved `opus` to Opus 5 while the Mac got Opus 5.5, on the same account). `subagents` sets `CLAUDE_CODE_SUBAGENT_MODEL`: any agent without a model of its own runs there, whatever the session model is. The built-in Plan agent always inherits the session model.
+`session` is the model a terminal session starts on, `subagents` the tier a helper gets when nothing else picks one. To move to a new version, change the `id` and run the three commands from "Change something".
 
-New model version: change the `id` (and effort if you like), then
+Why pin: without it the same alias resolved to different versions on different machines. A Claude Code too old for a pinned id fails with `API Error: 400 ... does not support this model`; run `claude update` there. The desktop app ignores these defaults and uses its own model picker.
 
-```bash
-bash install.sh --no-tools && git commit -am "models: ..." && git push && bash sync.sh --no-tools
-```
+## What Claude may do without asking
 
-A Claude Code that is too old for the pinned id fails loudly (`API Error: 400 ... does not support this model`), which is the point: run `claude update` there.
+Set in [`claude/settings.json`](claude/settings.json):
 
-The Claude desktop app ignores these defaults: it starts every session with its own `--model` and `--effort` flags from its picker. The settings govern terminal sessions (and all remote machines).
+- **Runs freely**: reading and searching files, copying and moving, Python tooling (`uv`, `pytest`, `ruff`), LaTeX, every `git` command except force-push, `kill` and `pkill`.
+- **Asks first**: `rm`, `rmdir`, `find -delete`, `killall`, `rsync --delete`, `tmux kill-*`.
+- **Blocked**: `sudo`, `dd`, `mkfs`, recursive `chmod`/`chown`, `git push --force`, reading `.env` files and SSH or AWS keys.
 
-The other machines have no GitHub credentials; `sync.sh` copies the repo (with its `.git`) over SSH and overwrites the remote copy. It refuses a host whose copy has uncommitted edits or its own commits, so nothing is lost silently: copy those changes back here first, or pass `--force`. A remote `~/claude-config/trash/` is never touched. `install.sh` also sets the git identity when none is set, retires `~/.claude/settings.local.json` (its rules live in settings.json), and with tools enabled runs `claude update`.
-
-## What is per machine
-
-- **Login**: run `claude` once on a new machine and log in.
-- **Telegram for autoresearch**: `~/.config/autoresearch/telegram.env` (bot token + chat id). Not synced.
-- **Tools** are installed per user by `install.sh`: `uv` and `~/.claude/venv` (python-pptx, pymupdf, matplotlib), `jq`, `tectonic` (LaTeX; the static musl build on Linux, the official one needs a newer glibc than Ubuntu 22.04 has), `resvg` (SVG→PNG), `node` (Linux), LibreOffice AppImage (Linux, slide previews). On the Mac slides render through PowerPoint. Web pages (explain-html, archify) need Chrome: present on the Mac, rikhat_ws and robotics1; robotics2/3 and robomed4 lack it and the system libraries it needs, so pages built there are not screenshotted.
+Anything not listed goes through Claude Code's auto mode, which judges each command. Other choices in that file: updates follow the `stable` channel, and chat transcripts are kept 90 days.
 
 ## Deleting
 
-Claude never runs `rm`; it runs `trash <paths>`. Inside a git repo that lands in `<main checkout>/trash/` (gitignored; a linked worktree uses the main checkout's folder so `git worktree remove` cannot delete it), elsewhere in `~/.trash/`. Nothing is overwritten: an older item with the same name gets a timestamp. A path on another filesystem than its trash folder (for example `/data1/...` outside a repo on the GPU servers) is refused, because moving it would copy everything; Claude then asks for `rm`, or you set `TRASH_DIR` to a folder on that disk. Empty the trash folders yourself when you want the space back.
+Claude runs `trash <paths>` where it would run `rm`. Inside a git repo the files land in that repo's `trash/` folder, elsewhere in `~/.trash/`. Nothing in the trash is overwritten; an older item with the same name gets a timestamp. I empty the trash myself.
 
-On the Mac the filesystem ignores case, so `~/.trash` *is* the system `~/.Trash`: trashed files show up in the Finder's Trash and you empty it from the Dock. Finder is set to remove items after 30 days, which also applies to the installer's settings backups that land there. Claude cannot list that folder (macOS protects it), which is fine.
+On the Mac `~/.trash` is the Finder Trash, which Finder empties after 30 days. A path on a different disk than its trash folder is refused, because moving it would copy everything; Claude then asks for `rm`, or I set `TRASH_DIR` to a folder on that disk.
 
-## Cleanup of old state
+## What differs per machine
+
+- **Login**: once per machine.
+- **Telegram for autoresearch**: `~/.config/autoresearch/telegram.env`, entered by hand, never synced.
+- **Tools**: `install.sh` installs what the skills need for the current user: `uv` and a small Python environment, `jq`, `tectonic` (LaTeX), `resvg` (SVG to PNG), `node` and LibreOffice on Linux. On the Mac slides render through PowerPoint. Web pages are screenshotted only where Chrome exists: the Mac, rikhat_ws and robotics1.
+- **Mac only**: the draw.io plugin (`claude/settings.macos.json`).
+
+## The better-paper skill
+
+It has its own repo, `~/Desktop/projects/BetterPaper` (GitHub: rihat99/BetterPaper). To ship a change:
 
 ```bash
-bash cleanup.sh          # dry run
-bash cleanup.sh --yes    # apply
+cd ~/Desktop/projects/BetterPaper && git commit -am "what changed" && git push
+cd ~/claude-config && bash install.sh --no-tools && bash sync.sh --no-tools
 ```
 
-It only moves leftovers (old handoffs, downloads, `*.bak*` files) into the trash. Chats are not touched: Claude Code removes terminal transcripts older than 30 days by itself and keeps Desktop-app sessions until you archive them in the app. There is no automatic cleanup beyond that.
+## Housekeeping
+
+```bash
+bash cleanup.sh          # show leftovers: old handoffs, downloads, *.bak files
+bash cleanup.sh --yes    # move them to the trash
+```
+
+It only moves things to the trash and never touches chats.
+
+## Where things are
+
+| Path | What it is |
+|---|---|
+| `claude/CLAUDE.md` | the global working rules |
+| `claude/settings.json` | permissions and other Claude Code settings; `settings.macos.json` adds the Mac-only part |
+| `claude/models.json` | model versions and effort per tier |
+| `claude/agents/` | the helper agents |
+| `claude/skills/` | the skills kept in this repo |
+| `claude/autoresearch/delegation.md` | my addition to the autoresearch skill: the orchestrator hands shell and multi-file work to helpers |
+| `claude/statusline.sh` | the status bar: model, context used, 5-hour and 7-day usage |
+| `claude/keybindings.json` | keyboard shortcuts |
+| `tmux/tmux.conf` | shared tmux config |
+| `bin/trash` | the trash helper |
+| `bin/render_config.py` | writes `~/.claude/settings.json` and the agents from the files above |
+| `bin/patch_autoresearch.py` | inserts `delegation.md` into the installed autoresearch skill |
+| `install.sh`, `sync.sh`, `cleanup.sh` | set up this machine, copy to the others, tidy up |
+| `vendor/` | not in git: the autoresearch and BetterPaper clones, copied along by `sync.sh` |

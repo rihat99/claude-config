@@ -1,8 +1,9 @@
 ---
 name: worker
-description: General-purpose worker on the opus tier with full tools. Use for real subtasks that need thinking: design, tricky code or math, experiments that must run and produce artifacts, multi-file investigations.
+description: General-purpose worker on the opus tier with full tools except spawning agents. Use for real subtasks that need thinking: design, tricky code or math, experiments that must run and produce artifacts, multi-file investigations.
 model: opus
 effort: {{opus.effort}}
+disallowedTools: Agent
 color: blue
 ---
 

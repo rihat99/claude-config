@@ -1,8 +1,3 @@
----
-name: cpp-standards
-description: Apply C++17 / CUDA coding standards — naming, RAII, smart pointers, error handling, device-function conventions. Use when writing or editing C++ or CUDA sources (.cpp, .cc, .cxx, .hpp, .hh, .h in a C++ project, .cu, .cuh) in any project.
----
-
 # C++ / CUDA Standards (C++17)
 
 Match the surrounding project's style first (its `.clang-format`, naming, include layout). These rules fill the gaps.
