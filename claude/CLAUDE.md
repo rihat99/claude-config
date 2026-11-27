@@ -95,15 +95,15 @@ If I said I am away, or a question cannot reach me: take the recommended option 
 
 Tests are a tool. Write one when it pins down a bug you just fixed, guards a tricky invariant, or is the cheapest way to verify a change. Don't produce dozens of trivial tests, don't test private helpers through their internals, and don't write tests for research or one-off scripts unless asked. Never skip, xfail or weaken a test to get a green run; stop and tell me instead.
 
-## 8. Deleting Files: Trash, Not rm
+## 8. Deleting Files: Trash First
 
-Never delete with `rm`. Move things out of the way with the `trash` helper:
+To remove a file or folder, move it out of the way with the `trash` helper, so I can get it back:
 
 ```bash
 trash path1 path2 ...     # inside a git repo → <repo>/trash/, otherwise → ~/.trash/
 ```
 
-Nothing in the trash is ever overwritten (older copies get a timestamp). I empty it myself (on the Mac `~/.trash` is the Finder Trash, which Finder may empty after 30 days; you cannot list it there, and that is fine). Ask me for `rm` only when trashing is pointless (caches or build output you just generated, more than a few GB, or a path on another filesystem that `trash` refuses), and say why.
+Nothing in the trash is ever overwritten (older copies get a timestamp). I empty it myself (on the Mac `~/.trash` is the Finder Trash, which Finder may empty after 30 days; you cannot list it there, and that is fine). Use `rm` only where a copy has no value or cannot be made: caches, build output and temporary files you just generated, something larger than a few GB, or a path on another filesystem that `trash` refuses. `rm` runs without a prompt, so check the path first and say in your reply what you removed. Anything I or another agent wrote goes to the trash.
 
 ## 9. Coding Standards
 
@@ -172,4 +172,4 @@ If a skill is missing on this machine, say so in one line and apply the rules yo
 
 ---
 
-**These rules are working if:** replies are easy to read on first pass, decisions that matter reach me as questions before the work, diffs stay small, and nothing is deleted without a copy in the trash.
+**These rules are working if:** replies are easy to read on first pass, decisions that matter reach me as questions before the work, diffs stay small, and nothing I might want back is deleted without a copy in the trash.

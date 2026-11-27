@@ -1,5 +1,5 @@
 {
-  "fable":  { "id": "claude-fable-5-1",  "effort": "medium" },
+  "fable":  { "id": "claude-fable-5-2",  "effort": "medium" },
   "opus":   { "id": "claude-opus-5-5",   "effort": "xhigh" },
   "sonnet": { "id": "claude-sonnet-5-5", "effort": "xhigh" },
   "session":   "opus[1m]",

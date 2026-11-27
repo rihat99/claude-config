@@ -7,8 +7,8 @@ My Claude Code setup, kept in one place and copied to every machine I work on: t
 - **One set of working rules.** [`claude/CLAUDE.md`](claude/CLAUDE.md) tells Claude how to think before coding, keep changes small, ask before deciding things that are mine to decide, and write replies I can read on a phone.
 - **Skills for the work I repeat.** Coding to my principles, debugging, reviews, figures, reports, slides, paper explainers.
 - **Fixed models.** `opus` means the same version on every machine, and helper agents run on a tier I chose.
-- **Fewer permission prompts, safely.** Everyday commands run without asking. Deleting asks first. `sudo` and force-push are blocked.
-- **Nothing is deleted.** Claude moves files to a trash folder with `trash` and never runs `rm` on its own.
+- **No permission prompts for everyday work.** Listed commands run at once; everything else is judged by Claude Code's auto mode.
+- **Trash by default.** Claude moves files to a trash folder with `trash` and keeps `rm` for things not worth keeping.
 
 ## Set it up
 
@@ -79,7 +79,7 @@ Claude can hand part of a task to a helper with a clean context. The pinned ones
 
 ```json
 {
-  "fable":  { "id": "claude-fable-5-1",  "effort": "medium" },
+  "fable":  { "id": "claude-fable-5-2",  "effort": "medium" },
   "opus":   { "id": "claude-opus-5-5",   "effort": "xhigh" },
   "sonnet": { "id": "claude-sonnet-5-5", "effort": "xhigh" },
   "session":   "opus[1m]",
@@ -95,17 +95,16 @@ Why pin: without it the same alias resolved to different versions on different m
 
 Set in [`claude/settings.json`](claude/settings.json):
 
-- **Runs freely**: reading and searching files, copying and moving, Python tooling (`uv`, `pytest`, `ruff`), LaTeX, every `git` command except force-push, `kill` and `pkill`.
-- **Asks first**: `rm`, `rmdir`, `find -delete`, `killall`, `rsync --delete`, `tmux kill-*`.
-- **Blocked**: `sudo`, `dd`, `mkfs`, recursive `chmod`/`chown`, `git push --force`, reading `.env` files and SSH or AWS keys.
+- **Runs freely**: reading and searching files, copying, moving and deleting, Python tooling (`uv`, `pytest`, `ruff`), LaTeX, `git`, `tmux`, `kill` and `pkill`.
+- **Blocked**: reading `.env` files and SSH, AWS or Claude credentials. No command is blocked or set to ask by a rule.
 
-Anything not listed goes through Claude Code's auto mode, which judges each command. Other choices in that file: updates follow the `stable` channel, and chat transcripts are kept 90 days.
+A listed command runs at once, with no check: that includes `rm`, every `git` command (force-push too), `kill`, `pkill` and `killall`. Anything not listed, such as `sudo`, goes through Claude Code's auto mode, which judges each command and refuses the destructive ones. The list is still worth keeping: it makes common commands instant, and it is what lets them run where auto mode is off (`claude -p` scripts, the desktop app in manual mode). Claude Code itself refuses `rm -rf /` and `rm -rf ~` whatever the rules say. Other choices in that file: updates follow the `stable` channel, and chat transcripts are kept 90 days.
 
 ## Deleting
 
-Claude runs `trash <paths>` where it would run `rm`. Inside a git repo the files land in that repo's `trash/` folder, elsewhere in `~/.trash/`. Nothing in the trash is overwritten; an older item with the same name gets a timestamp. I empty the trash myself.
+Claude's rules tell it to run `trash <paths>` where it would run `rm`, and to keep `rm` for caches, build output and anything too big to move. Inside a git repo the files land in that repo's `trash/` folder, elsewhere in `~/.trash/`. Nothing in the trash is overwritten; an older item with the same name gets a timestamp. I empty the trash myself.
 
-On the Mac `~/.trash` is the Finder Trash, which Finder empties after 30 days. A path on a different disk than its trash folder is refused, because moving it would copy everything; Claude then asks for `rm`, or I set `TRASH_DIR` to a folder on that disk.
+On the Mac `~/.trash` is the Finder Trash, which Finder empties after 30 days. A path on a different disk than its trash folder is refused, because moving it would copy everything; Claude then uses `rm` and says so, or I set `TRASH_DIR` to a folder on that disk.
 
 ## What differs per machine
 
