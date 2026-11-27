@@ -264,8 +264,9 @@ log "settings.json and agents (claude/models.json)"
 python3 "$REPO/bin/render_config.py" || warn "render_config.py failed"
 # a skill or agent with broken frontmatter is ignored silently by Claude Code; say so here instead
 if command -v claude >/dev/null 2>&1; then
-  for kind in skills agents; do
-    claude plugin validate "$CL/$kind" >/dev/null 2>&1 || warn "claude plugin validate ~/.claude/$kind reports problems; run it to see them"
+  # the skills are validated in the repo: the validator does not follow the symlinks in ~/.claude/skills
+  for dir in "$REPO/claude/skills" "$CL/agents"; do
+    claude plugin validate "$dir" >/dev/null 2>&1 || warn "claude plugin validate $dir reports problems; run it to see them"
   done
 fi
 
