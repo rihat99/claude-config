@@ -1,0 +1,60 @@
+# Prompt for zsh (Mac) and bash (Linux): shell/zshrc.zsh and shell/bashrc.bash point
+# STARSHIP_CONFIG here. Only plain Unicode symbols, so no Nerd Font is needed in iTerm,
+# VS Code or a phone SSH client.
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# One listed order instead of starship's default "every module": the prompt shows where I am,
+# the git state, the Python environment and how long the last command took, nothing else.
+format = """
+$hostname\
+$directory\
+$git_branch\
+$git_state\
+$git_status\
+$conda\
+$python\
+$cmd_duration\
+$line_break\
+$jobs\
+$character"""
+add_newline = true
+# git status on a network home directory can take longer than the default 500 ms
+command_timeout = 2000
+
+[hostname]
+ssh_only = true
+format = '[$hostname]($style) '
+style = 'bold yellow'
+
+[directory]
+truncation_length = 4
+truncate_to_repo = true
+style = 'bold cyan'
+
+[git_branch]
+format = '[$branch]($style) '
+style = 'purple'
+
+[git_status]
+style = 'red'
+
+[conda]
+format = '[$environment]($style) '
+style = 'green'
+
+[python]
+# shown only for an active virtualenv; conda environments are the conda module's job
+format = '([$virtualenv]($style) )'
+style = 'green'
+detect_extensions = []
+detect_files = []
+detect_folders = []
+
+[cmd_duration]
+min_time = 5000
+format = '[$duration]($style) '
+style = 'yellow'
+
+[character]
+success_symbol = '[❯](bold green)'
+error_symbol = '[❯](bold red)'

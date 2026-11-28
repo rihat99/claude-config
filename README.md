@@ -1,6 +1,6 @@
 # dotfiles
 
-My Claude Code setup, kept in one place and copied to every machine I work on: the Mac, rikhat_ws, robotics1, robotics2, robotics3 and robomed4. Claude follows the same rules, has the same skills and asks for the same permissions wherever I open it.
+My setup, kept in one place and copied to every machine I work on: the Mac, rikhat_ws, robotics1, robotics2, robotics3 and robomed4. The main part is Claude Code: Claude follows the same rules, has the same skills and asks for the same permissions wherever I open it. Two optional parts make the terminal and tmux look and behave the same everywhere.
 
 ## What it gives me
 
@@ -42,6 +42,29 @@ bash sync.sh --no-tools                           # send it to the other machine
 `CLAUDE.md`, the skills, the status line and `tmux.conf` are links into this folder, so on the Mac an edit is live at once. `settings.json` (permissions and hooks) and the agents are written out by `install.sh`, so they need the first command. A Claude session that is already open picks up new settings after a restart.
 
 `sync.sh` skips a machine whose copy has its own edits or commits, so nothing is lost; bring those changes back here first, or pass `--force` to overwrite them.
+
+## The terminal parts (optional)
+
+Two parts are off until I switch them on, machine by machine. A machine remembers its choice in `~/.config/dotfiles/parts`, so later installs and syncs keep it.
+
+```bash
+bash install.sh --shell --tmux            # on this machine
+bash sync.sh --shell --tmux robotics2     # on another machine
+bash install.sh --no-shell                # off again (same for --no-tmux)
+```
+
+Passing the flag again updates the downloaded projects; a plain run never downloads.
+
+**`--shell`: the prompt.** [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) on the Mac (with suggestions from history and syntax colours while typing) or [oh-my-bash](https://github.com/ohmybash/oh-my-bash) on Linux, and the [starship](https://starship.rs) prompt on both, so every machine looks the same:
+
+```
+robotics2 ~/project/src main [!?] myenv 42s
+❯
+```
+
+That is: host name (only over SSH), folder, git branch and state, conda or virtualenv, and the run time of a command that took over 5 seconds. The arrow turns red after a failed command. To change the look, edit [`shell/starship.toml`](shell/starship.toml); it uses no special font. The installer adds one block to `~/.zshrc` or `~/.bashrc` that loads [`shell/zshrc.zsh`](shell/zshrc.zsh) or [`shell/bashrc.bash`](shell/bashrc.bash) and changes nothing else in that file. Claude's own command shell skips all of it.
+
+**`--tmux`: [Oh my tmux](https://github.com/gpakosz/.tmux).** A status bar with session, uptime, time and host, plus its extra keys: `<prefix> -` and `<prefix> _` split, `<prefix> h/j/k/l` move between panes, `<prefix> +` maximises a pane, `<prefix> m` toggles the mouse, `<prefix> r` reloads. My own keys are kept: prefix `Alt-a` (backup `Ctrl-b`), `Alt-1..9` and `Alt-p/n` switch windows, `<prefix> C` opens a window in the current folder. They live at the end of [`tmux/tmux.conf.local`](tmux/tmux.conf.local), which is Oh my tmux's own settings file; colours and the status bar are changed there too. Without this part tmux uses the plain [`tmux/tmux.conf`](tmux/tmux.conf). A tmux that is already running keeps its old look until `<prefix> r` or a restart.
 
 ## The skills
 
@@ -134,7 +157,9 @@ It only moves things to the trash and never touches chats.
 | `claude/skills/` | the skills kept in this repo |
 | `claude/statusline.sh` | the status bar: model, context used, 5-hour and 7-day usage |
 | `claude/keybindings.json` | keyboard shortcuts |
-| `tmux/tmux.conf` | shared tmux config |
+| `tmux/tmux.conf` | plain tmux config, used when the tmux part is off |
+| `tmux/tmux.conf.local` | Oh my tmux settings and my keys, used when the tmux part is on |
+| `shell/` | the optional shell part: `starship.toml` (prompt), `zshrc.zsh` (Mac), `bashrc.bash` (Linux) |
 | `bin/trash` | the trash helper |
 | `bin/render_config.py` | writes `~/.claude/settings.json` and the agents from the files above; hooks another program added on a machine are kept |
 | `install.sh`, `sync.sh`, `cleanup.sh` | set up this machine, copy to the others, tidy up |

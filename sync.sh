@@ -5,6 +5,7 @@
 #   bash sync.sh                 # all hosts
 #   bash sync.sh robotics2       # one or more hosts
 #   bash sync.sh --no-tools ...  # pass install.sh --no-tools
+#   bash sync.sh --shell --tmux robotics2   # switch an optional part on there (also --no-shell, --no-tmux)
 #   bash sync.sh --force ...     # overwrite a remote copy that has its own edits or commits
 #
 # A host whose ~/dotfiles has uncommitted edits, or commits this copy does not have, is
@@ -17,7 +18,7 @@ HOSTS=(); FLAGS=(); FORCE=0
 for a in "$@"; do
   case "$a" in
     --force) FORCE=1 ;;
-    --no-tools) FLAGS+=("$a") ;;
+    --no-tools|--shell|--no-shell|--tmux|--no-tmux) FLAGS+=("$a") ;;
     -*) echo "unknown flag $a" >&2; exit 2 ;;
     *) HOSTS+=("$a") ;;
   esac
