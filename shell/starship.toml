@@ -1,42 +1,24 @@
 # Prompt for zsh (Mac) and bash (Linux): shell/zshrc.zsh and shell/bashrc.bash point
-# STARSHIP_CONFIG here. Only plain Unicode symbols, so no Nerd Font is needed in iTerm,
-# VS Code or a phone SSH client.
+# STARSHIP_CONFIG here. One line, and only characters the Monaco font has, so no Nerd Font is
+# needed in iTerm, VS Code or a phone SSH client. Colours are the terminal's own 16 (on the Mac
+# the iTerm profile iterm/dotfiles.json sets them), so the prompt follows light and dark mode.
 "$schema" = 'https://starship.rs/config-schema.json'
 
-# One listed order instead of starship's default "every module": the prompt shows where I am,
-# the git state, the Python environment and how long the last command took, nothing else.
-format = """
-$hostname\
-$directory\
-$git_branch\
-$git_state\
-$git_status\
-$conda\
-$python\
-$cmd_duration\
-$line_break\
-$jobs\
-$character"""
-add_newline = true
-# git status on a network home directory can take longer than the default 500 ms
+# One listed order instead of starship's default "every module": host (only over SSH), folder,
+# Python environment, how long the last command took. No git.
+format = '$hostname$directory$conda$python$cmd_duration$jobs$character'
+add_newline = false
 command_timeout = 2000
 
 [hostname]
 ssh_only = true
 format = '[$hostname]($style) '
-style = 'bold yellow'
+style = 'bold purple'
 
 [directory]
-truncation_length = 4
-truncate_to_repo = true
-style = 'bold cyan'
-
-[git_branch]
-format = '[$branch]($style) '
-style = 'purple'
-
-[git_status]
-style = 'red'
+truncation_length = 3
+truncate_to_repo = false
+style = 'bold blue'
 
 [conda]
 format = '[$environment]($style) '
@@ -56,5 +38,5 @@ format = '[$duration]($style) '
 style = 'yellow'
 
 [character]
-success_symbol = '[❯](bold green)'
-error_symbol = '[❯](bold red)'
+success_symbol = '[›](bold green)'
+error_symbol = '[›](bold red)'

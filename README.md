@@ -51,6 +51,7 @@ Two parts are off until I switch them on, machine by machine. A machine remember
 bash install.sh --shell --tmux            # on this machine
 bash sync.sh --shell --tmux robotics2     # on another machine
 bash install.sh --no-shell                # off again (same for --no-tmux)
+bash install.sh --tmux-theme=pink         # tmux colours: navy (default), vanilla or pink
 ```
 
 Passing the flag again updates the downloaded projects; a plain run never downloads.
@@ -58,13 +59,16 @@ Passing the flag again updates the downloaded projects; a plain run never downlo
 **`--shell`: the prompt.** [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) on the Mac (with suggestions from history and syntax colours while typing) or [oh-my-bash](https://github.com/ohmybash/oh-my-bash) on Linux, and the [starship](https://starship.rs) prompt on both, so every machine looks the same:
 
 ```
-robotics2 ~/project/src main [!?] myenv 42s
-❯
+robotics2 ~/project/src myenv 42s › 
 ```
 
-That is: host name (only over SSH), folder, git branch and state, conda or virtualenv, and the run time of a command that took over 5 seconds. The arrow turns red after a failed command. To change the look, edit [`shell/starship.toml`](shell/starship.toml); it uses no special font. The installer adds one block to `~/.zshrc` or `~/.bashrc` that loads [`shell/zshrc.zsh`](shell/zshrc.zsh) or [`shell/bashrc.bash`](shell/bashrc.bash) and changes nothing else in that file. Claude's own command shell skips all of it.
+That is, on one line: host name (only over SSH), folder, conda or virtualenv, and the run time of a command that took over 5 seconds. No git. The `›` is green and turns red after a failed command. To change the look, edit [`shell/starship.toml`](shell/starship.toml). It uses no Nerd Font, only characters that the Monaco font has, and the terminal's own 16 colours.
 
-**`--tmux`: [Oh my tmux](https://github.com/gpakosz/.tmux).** A status bar with session, uptime, time and host, plus its extra keys: `<prefix> -` and `<prefix> _` split, `<prefix> h/j/k/l` move between panes, `<prefix> +` maximises a pane, `<prefix> m` toggles the mouse, `<prefix> r` reloads. My own keys are kept: prefix `Alt-a` (backup `Ctrl-b`), `Alt-1..9` and `Alt-p/n` switch windows, `<prefix> C` opens a window in the current folder. They live at the end of [`tmux/tmux.conf.local`](tmux/tmux.conf.local), which is Oh my tmux's own settings file; colours and the status bar are changed there too. Without this part tmux uses the plain [`tmux/tmux.conf`](tmux/tmux.conf). A tmux that is already running keeps its old look until `<prefix> r` or a restart.
+On the Mac the part also adds an iTerm profile named `dotfiles` ([`iterm/dotfiles.json`](iterm/dotfiles.json)) that sets those 16 colours to the Apple system colours, for light and dark mode. It inherits everything else from the `Default` profile. To use it: iTerm Settings → Profiles → `dotfiles` → Other Actions → Set as Default. The installer adds one block to `~/.zshrc` or `~/.bashrc` that loads [`shell/zshrc.zsh`](shell/zshrc.zsh) or [`shell/bashrc.bash`](shell/bashrc.bash) and changes nothing else in that file. Claude's own command shell skips all of it.
+
+**`--tmux`: [Oh my tmux](https://github.com/gpakosz/.tmux).** A status bar with the session name on the left, the windows, and the time and host on the right; the word `PREFIX` shows while the prefix key is pressed. Its extra keys: `<prefix> -` and `<prefix> _` split, `<prefix> h/j/k/l` move between panes, `<prefix> +` maximises a pane, `<prefix> m` toggles the mouse, `<prefix> r` reloads. My own keys are kept: prefix `Alt-a` (backup `Ctrl-b`), `Alt-1..9` and `Alt-p/n` switch windows, `<prefix> C` opens a window in the current folder. They live at the end of [`tmux/tmux.conf.local`](tmux/tmux.conf.local), which is Oh my tmux's own settings file; the content of the status bar is set there too. Without this part tmux uses the plain [`tmux/tmux.conf`](tmux/tmux.conf).
+
+The colours are a theme, one small file in [`tmux/themes/`](tmux/themes): `navy` (default), `vanilla` (the colours Oh my tmux ships with) and `pink`. `--tmux-theme=NAME` switches, a running tmux changes at once, and the machine remembers the choice (the link `~/.config/dotfiles/tmux-theme.conf`). A new theme is a new file there with the same 16 names.
 
 ## The skills
 
@@ -158,8 +162,11 @@ It only moves things to the trash and never touches chats.
 | `claude/statusline.sh` | the status bar: model, context used, 5-hour and 7-day usage |
 | `claude/keybindings.json` | keyboard shortcuts |
 | `tmux/tmux.conf` | plain tmux config, used when the tmux part is off |
-| `tmux/tmux.conf.local` | Oh my tmux settings and my keys, used when the tmux part is on |
+| `tmux/tmux.conf.local` | Oh my tmux settings, status bar content and my keys, used when the tmux part is on |
+| `tmux/tmux.omt.conf` | `~/.tmux.conf` when the tmux part is on: loads the theme, then Oh my tmux |
+| `tmux/themes/` | status bar colours: `navy.conf`, `vanilla.conf`, `pink.conf` |
 | `shell/` | the optional shell part: `starship.toml` (prompt), `zshrc.zsh` (Mac), `bashrc.bash` (Linux) |
+| `iterm/dotfiles.json` | iTerm profile with the terminal colours (Mac, shell part) |
 | `bin/trash` | the trash helper |
 | `bin/render_config.py` | writes `~/.claude/settings.json` and the agents from the files above; hooks another program added on a machine are kept |
 | `install.sh`, `sync.sh`, `cleanup.sh` | set up this machine, copy to the others, tidy up |

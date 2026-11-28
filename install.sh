@@ -7,6 +7,7 @@
 #   bash install.sh --shell         # switch the shell part on here, or update it
 #   bash install.sh --tmux          # switch the tmux part on here, or update it
 #   bash install.sh --no-shell      # switch a part off again (same for --no-tmux)
+#   bash install.sh --tmux-theme=navy   # status bar colours: navy (default), vanilla or pink
 #
 # A part that was switched on stays on: the machine remembers it in ~/.config/dotfiles/parts,
 # so later plain runs and sync.sh keep it. Downloads happen only on a run that passes the flag.
@@ -21,8 +22,10 @@
 #   ~/.tmux.conf                                           -> tmux/tmux.conf
 #   shell part: oh-my-zsh (macOS) or oh-my-bash (Linux) in ~/.oh-my-*, starship in ~/.local/bin,
 #               and one block in ~/.zshrc or ~/.bashrc that sources shell/zshrc.zsh or shell/bashrc.bash
-#   tmux part:  Oh my tmux in ~/.local/share/oh-my-tmux; ~/.tmux.conf -> its .tmux.conf,
-#               ~/.tmux.conf.local -> tmux/tmux.conf.local (my keys and settings)
+#               on a Mac also the iTerm profile "dotfiles" (iterm/dotfiles.json: the 16 terminal colours)
+#   tmux part:  Oh my tmux in ~/.local/share/oh-my-tmux; ~/.tmux.conf -> tmux/tmux.omt.conf, which loads
+#               the theme (~/.config/dotfiles/tmux-theme.conf -> tmux/themes/NAME.conf) and then Oh my tmux;
+#               ~/.tmux.conf.local -> tmux/tmux.conf.local (status bar, my keys and settings)
 #   tools (user-local): uv + ~/.claude/venv, jq, tectonic, resvg, node (Linux), LibreOffice AppImage (Linux), Claude Code
 set -uo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,6 +33,7 @@ CL="$HOME/.claude"
 OS="$(uname -s)"; ARCH="$(uname -m)"
 DO_TOOLS=1
 SHELL_FLAG=""; TMUX_FLAG=""   # on | off | "" (keep what this machine remembers)
+TMUX_THEME=""                 # a name in tmux/themes, or "" (keep what this machine has)
 for a in "$@"; do
   case "$a" in
     --no-tools) DO_TOOLS=0 ;;
@@ -37,10 +41,14 @@ for a in "$@"; do
     --no-shell) SHELL_FLAG=off ;;
     --tmux) TMUX_FLAG=on ;;
     --no-tmux) TMUX_FLAG=off ;;
+    --tmux-theme=*) TMUX_THEME="${a#*=}" ;;
     -h|--help) awk 'NR>1 && /^#/ {sub(/^# ?/, ""); print} NR>1 && !/^#/ {exit}' "$0"; exit 0 ;;
     *) echo "unknown flag $a (see --help)" >&2; exit 2 ;;
   esac
 done
+if [ -n "$TMUX_THEME" ] && [ ! -f "$REPO/tmux/themes/$TMUX_THEME.conf" ]; then
+  echo "unknown tmux theme '$TMUX_THEME'; choose one of: $(cd "$REPO/tmux/themes" && ls | sed 's/\.conf$//' | tr '\n' ' ')" >&2; exit 2
+fi
 export PATH="$HOME/.local/bin:$PATH"
 log()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 note() { printf '    %s\n' "$*"; }
@@ -114,11 +122,19 @@ chmod +x "$REPO/claude/statusline.sh" "$REPO/bin/trash"
 # ---------------------------------------------------------------- tmux
 if part_on tmux && fetch_repo https://github.com/gpakosz/.tmux.git "$OMT" "$TMUX_FLAG"; then
   log "tmux (Oh my tmux)"
-  link "$OMT/.tmux.conf"            "$HOME/.tmux.conf"
+  link "$REPO/tmux/tmux.omt.conf"   "$HOME/.tmux.conf"
   link "$REPO/tmux/tmux.conf.local" "$HOME/.tmux.conf.local"
+  # the theme link is also the memory of which theme this machine uses
+  THEME_LINK="$HOME/.config/dotfiles/tmux-theme.conf"
+  [ -z "$TMUX_THEME" ] && [ ! -e "$THEME_LINK" ] && TMUX_THEME=navy
+  [ -n "$TMUX_THEME" ] && link "$REPO/tmux/themes/$TMUX_THEME.conf" "$THEME_LINK"
+  note "theme: $(basename "$(readlink "$THEME_LINK")" .conf)"
+  # a running tmux takes the new colours at once; without a server this does nothing
+  [ -n "$TMUX_THEME" ] && tmux source-file "$HOME/.tmux.conf" 2>/dev/null
 else
   link "$REPO/tmux/tmux.conf" "$HOME/.tmux.conf"
   [ -L "$HOME/.tmux.conf.local" ] && stash "$HOME/.tmux.conf.local"
+  [ -n "$TMUX_THEME" ] && warn "--tmux-theme needs the tmux part: add --tmux"
 fi
 [ -n "$TMUX_FLAG" ] && note "tmux part $TMUX_FLAG; a running tmux picks it up after: tmux kill-server (or <prefix> r)"
 
@@ -160,6 +176,10 @@ if part_on shell; then
     fetch_repo https://github.com/ohmybash/oh-my-bash.git "$HOME/.oh-my-bash" "$SHELL_FLAG"
   fi
   { [ -x "$HOME/.local/bin/starship" ] && [ "$SHELL_FLAG" != on ]; } || install_starship
+  # iTerm reads every file in this folder as a profile; mine only sets the colours
+  ITERM_PROFILES="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
+  [ -d "$HOME/Library/Application Support/iTerm2" ] && mkdir -p "$ITERM_PROFILES" \
+    && link "$REPO/iterm/dotfiles.json" "$ITERM_PROFILES/dotfiles.json"
   if ! grep -qxF "$RC_BEGIN" "$SHELL_RC" 2>/dev/null; then
     printf '\n%s\n. "%s"\n%s\n' "$RC_BEGIN" "$SHELL_SRC" "$RC_END" >> "$SHELL_RC"
     note "added the dotfiles block to $SHELL_RC (open a new terminal to see it)"

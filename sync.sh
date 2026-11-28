@@ -18,7 +18,7 @@ HOSTS=(); FLAGS=(); FORCE=0
 for a in "$@"; do
   case "$a" in
     --force) FORCE=1 ;;
-    --no-tools|--shell|--no-shell|--tmux|--no-tmux) FLAGS+=("$a") ;;
+    --no-tools|--shell|--no-shell|--tmux|--no-tmux|--tmux-theme=*) FLAGS+=("$a") ;;
     -*) echo "unknown flag $a" >&2; exit 2 ;;
     *) HOSTS+=("$a") ;;
   esac
