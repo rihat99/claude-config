@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Checks for the autoresearch hooks (context watch, task memory, restore after a compact).
 
-    python3 ~/claude-config/tests/test_autoresearch_hooks.py
+    python3 ~/dotfiles/tests/test_autoresearch_hooks.py
 """
 import json
 import os

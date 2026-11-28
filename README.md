@@ -1,4 +1,4 @@
-# claude-config
+# dotfiles
 
 My Claude Code setup, kept in one place and copied to every machine I work on: the Mac, rikhat_ws, robotics1, robotics2, robotics3 and robomed4. Claude follows the same rules, has the same skills and asks for the same permissions wherever I open it.
 
@@ -15,8 +15,8 @@ My Claude Code setup, kept in one place and copied to every machine I work on: t
 On the Mac (the machine that holds the GitHub login):
 
 ```bash
-git clone git@github.com:rihat99/claude-config.git ~/claude-config
-cd ~/claude-config && bash install.sh
+git clone git@github.com:rihat99/dotfiles.git ~/dotfiles
+cd ~/dotfiles && bash install.sh
 ```
 
 Every other machine gets it from the Mac, since they have no GitHub login:
@@ -33,7 +33,7 @@ Then run `claude` once on a new machine and log in. `install.sh` is safe to run 
 Edit a file here, then:
 
 ```bash
-cd ~/claude-config
+cd ~/dotfiles
 bash install.sh --no-tools                        # apply on this machine (seconds)
 git commit -am "what changed" && git push         # keep the history
 bash sync.sh --no-tools                           # send it to the other machines

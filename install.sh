@@ -33,7 +33,7 @@ warn() { printf '\033[1;33mwarn:\033[0m %s\n' "$*"; }
 
 HT="$HOME/.trash"   # on macOS this is the Finder Trash (Finder may empty it after 30 days)
 mkdir -p "$CL/skills" "$CL/agents" "$HOME/.local/bin" "$HT"
-STASH="$HT/claude-config-install-$(date +%Y%m%d-%H%M%S)"
+STASH="$HT/dotfiles-install-$(date +%Y%m%d-%H%M%S)"
 
 # Move an existing path out of the way (into ~/.trash) unless it is already our symlink.
 stash() {
@@ -60,7 +60,7 @@ log "PATH"
 for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
   case "$rc" in *.zshrc) [ "$OS" = "Darwin" ] || [ -f "$rc" ] || continue ;; esac
   [ -f "$rc" ] || touch "$rc"
-  grep -Ev '^[[:space:]]*#' "$rc" 2>/dev/null | grep -qE '(\$HOME|~|'"$HOME"')/\.local/bin' || { printf '\n# claude-config\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$rc"; note "added ~/.local/bin to PATH in $rc"; }
+  grep -Ev '^[[:space:]]*#' "$rc" 2>/dev/null | grep -qE '(\$HOME|~|'"$HOME"')/\.local/bin' || { printf '\n# dotfiles\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$rc"; note "added ~/.local/bin to PATH in $rc"; }
 done
 
 # ---------------------------------------------------------------- config files

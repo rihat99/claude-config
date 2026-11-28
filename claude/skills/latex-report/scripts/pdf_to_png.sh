@@ -11,7 +11,7 @@ except ImportError:
     try:
         import fitz
     except ImportError:
-        sys.exit("pdf_to_png: PyMuPDF missing. Run ~/claude-config/install.sh (creates ~/.claude/venv).")
+        sys.exit("pdf_to_png: PyMuPDF missing. Run ~/dotfiles/install.sh (creates ~/.claude/venv).")
 if len(sys.argv) < 2:
     sys.exit("usage: pdf_to_png.sh file.pdf [dpi]")
 pdf = os.path.abspath(sys.argv[1])

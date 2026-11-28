@@ -137,7 +137,7 @@ The lines above are the short form. The full principles (ten laws, twelve chapte
 
 Subagents other than forks never see this conversation. Every delegation prompt carries the full context: goal, exact paths, what is already known, what to return. For anything non-trivial, write that context into a file first (the session scratchpad if there is one, else the project's notes folder) and point the agent at it.
 
-Models come in three tiers, `fable`, `opus` and `sonnet`. The exact version and effort of each tier live in one file, `~/claude-config/claude/models.json`; never hard-code a model id anywhere else. Subagents run on the `opus` tier by default, whatever model this session runs on (forks and the built-in Plan agent follow the session model). Use `sonnet` only for trivial mechanical work. Prefer `worker` to the built-in general-purpose agent: `worker` pins its effort, general-purpose inherits the session's. Never pass `model:` when spawning an agent unless I ask.
+Models come in three tiers, `fable`, `opus` and `sonnet`. The exact version and effort of each tier live in one file, `~/dotfiles/claude/models.json`; never hard-code a model id anywhere else. Subagents run on the `opus` tier by default, whatever model this session runs on (forks and the built-in Plan agent follow the session model). Use `sonnet` only for trivial mechanical work. Prefer `worker` to the built-in general-purpose agent: `worker` pins its effort, general-purpose inherits the session's. Never pass `model:` when spawning an agent unless I ask.
 
 Pinned agents in `~/.claude/agents/`:
 - `worker` — opus tier, full tools except spawning agents. Real subtasks: design, tricky code, experiments that must produce artifacts.

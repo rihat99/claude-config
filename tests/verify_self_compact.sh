@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # verify_self_compact.sh: checks the self-compact chain end to end.
 # It drives tmux and spawns background processes (fine from a shell or an agent):
-#     bash ~/claude-config/tests/verify_self_compact.sh
+#     bash ~/dotfiles/tests/verify_self_compact.sh
 #
 # Covers:
 #   1. request_compact.py: queues into ~/.claude/self-compact/ (HOME is a temp

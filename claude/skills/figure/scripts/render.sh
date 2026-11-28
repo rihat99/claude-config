@@ -35,7 +35,7 @@ elif command -v rsvg-convert >/dev/null 2>&1; then
 elif [ -x "$VENV_PY" ] && "$VENV_PY" -c "import cairosvg" 2>/dev/null; then
   TOOL=cairosvg; "$VENV_PY" -c "import cairosvg,sys; cairosvg.svg2png(url=sys.argv[1], write_to=sys.argv[2], scale=float(sys.argv[3]))" "$IN" "$PNG" "$SCALE" 2>"$ERR"
 else
-  echo "render.sh: no SVG renderer found (resvg, rsvg-convert, cairosvg). Figure not rendered; run ~/claude-config/install.sh." >&2; exit 3
+  echo "render.sh: no SVG renderer found (resvg, rsvg-convert, cairosvg). Figure not rendered; run ~/dotfiles/install.sh." >&2; exit 3
 fi
 [ -s "$PNG" ] || { echo "render.sh: $TOOL could not render $IN (fix the SVG):" >&2; tail -5 "$ERR" >&2; rm -f "$ERR"; exit 4; }
 grep -i 'warn\|no match' "$ERR" >&2 || true

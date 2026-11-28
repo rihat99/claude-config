@@ -50,6 +50,6 @@ Bad, too detailed:
 - Log: `~/.claude/self-compact/deliver.log`. A failed delivery is recorded there with the line that was not typed.
 - Only `/compact` and `/clear` lines are accepted, and the follow-up may not start with `/`.
 
-The Stop hook is registered in `~/claude-config/claude/settings.json` and installed by `install.sh`. `bash ~/claude-config/tests/verify_self_compact.sh` checks the chain end to end, including a real tmux pane.
+The Stop hook is registered in `~/dotfiles/claude/settings.json` and installed by `install.sh`. `bash ~/dotfiles/tests/verify_self_compact.sh` checks the chain end to end, including a real tmux pane.
 
 Subagents never compact: a subagent that outgrows its context writes its findings to a file and returns.

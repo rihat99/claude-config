@@ -7,7 +7,7 @@
 #   bash sync.sh --no-tools ...  # pass install.sh --no-tools
 #   bash sync.sh --force ...     # overwrite a remote copy that has its own edits or commits
 #
-# A host whose ~/claude-config has uncommitted edits, or commits this copy does not have, is
+# A host whose ~/dotfiles has uncommitted edits, or commits this copy does not have, is
 # skipped so nothing is lost: copy those changes back here first, or pass --force.
 # The remote trash/ folder (bin/trash inside the repo) is never touched.
 set -uo pipefail
@@ -31,16 +31,16 @@ for h in "${HOSTS[@]}"; do
   fi
   if [ "$FORCE" = 0 ]; then
     # first line: remote HEAD (or NONE), then any uncommitted changes
-    state="$(ssh -o BatchMode=yes "$h" 'cd ~/claude-config 2>/dev/null || { echo NONE; exit 0; }; git rev-parse HEAD 2>/dev/null || echo NONE; git status --porcelain 2>/dev/null | head -20')"
+    state="$(ssh -o BatchMode=yes "$h" 'cd ~/dotfiles 2>/dev/null || { echo NONE; exit 0; }; git rev-parse HEAD 2>/dev/null || echo NONE; git status --porcelain 2>/dev/null | head -20')"
     rhead="$(printf '%s\n' "$state" | head -1)"
     dirty="$(printf '%s\n' "$state" | sed -n '2,$p')"
     if [ -n "$dirty" ]; then
-      echo "skipped: ~/claude-config on $h has uncommitted changes (copy them back here, or --force):"; echo "$dirty"; continue
+      echo "skipped: ~/dotfiles on $h has uncommitted changes (copy them back here, or --force):"; echo "$dirty"; continue
     fi
     if [ "$rhead" != NONE ] && ! git -C "$REPO" merge-base --is-ancestor "$rhead" HEAD 2>/dev/null; then
       echo "skipped: $h has commits this copy does not have ($rhead); copy them back here, or --force"; continue
     fi
   fi
-  rsync -a --delete --exclude .DS_Store --exclude /trash/ "$REPO/" "$h:claude-config/" || { echo "rsync failed"; continue; }
-  ssh -o BatchMode=yes "$h" "bash ~/claude-config/install.sh ${FLAGS[*]:-}"
+  rsync -a --delete --exclude .DS_Store --exclude /trash/ "$REPO/" "$h:dotfiles/" || { echo "rsync failed"; continue; }
+  ssh -o BatchMode=yes "$h" "bash ~/dotfiles/install.sh ${FLAGS[*]:-}"
 done

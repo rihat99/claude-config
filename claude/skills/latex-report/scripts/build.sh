@@ -14,7 +14,7 @@ ENGINE=""
 if command -v tectonic >/dev/null 2>&1 && tectonic --version >/dev/null 2>&1; then ENGINE=tectonic
 elif command -v latexmk >/dev/null 2>&1 && command -v xelatex >/dev/null 2>&1; then ENGINE=latexmk
 elif command -v xelatex >/dev/null 2>&1; then ENGINE=xelatex
-else echo "build.sh: no working LaTeX engine (tectonic, or latexmk/xelatex) found. Install tectonic: bash ~/claude-config/install.sh" >&2; exit 3; fi
+else echo "build.sh: no working LaTeX engine (tectonic, or latexmk/xelatex) found. Install tectonic: bash ~/dotfiles/install.sh" >&2; exit 3; fi
 
 LOG="$DIR/$STEM.build.log"; TEXLOG="$DIR/$STEM.log"
 rm -f "$TEXLOG"   # never read a stale log from an earlier run
