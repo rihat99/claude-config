@@ -14,8 +14,10 @@ rm -f "$PDF"   # our own output from a previous run
 WHY=""
 
 if [ "$(uname -s)" = "Darwin" ] && [ -d "/Applications/Microsoft PowerPoint.app" ]; then
-  COPY="$TMP/render-$$.pptx"; cp "$IN" "$COPY"
-  osascript - "$COPY" "$TMP/out.pdf" <<'EOF2' >/dev/null 2>"$TMP/osa.err"
+  # fixed paths: sandboxed PowerPoint asks "grant access" once per new path, so a new temp dir would ask every run
+  FIXED="$HOME/.cache/pptx-render"; mkdir -p "$FIXED"
+  COPY="$FIXED/render-copy.pptx"; cp "$IN" "$COPY"; rm -f "$FIXED/render-copy.pdf"
+  osascript - "$COPY" "$FIXED/render-copy.pdf" <<'EOF2' >/dev/null 2>"$TMP/osa.err"
 on run argv
   set src to POSIX file (item 1 of argv)
   set dst to POSIX file (item 2 of argv)
@@ -28,7 +30,7 @@ on run argv
   end tell
 end run
 EOF2
-  if [ -s "$TMP/out.pdf" ]; then mv "$TMP/out.pdf" "$PDF"
+  if [ -s "$FIXED/render-copy.pdf" ]; then mv "$FIXED/render-copy.pdf" "$PDF"
   else WHY="PowerPoint: $(tail -1 "$TMP/osa.err" 2>/dev/null)"; echo "render.sh: PowerPoint export failed ($WHY); trying LibreOffice" >&2; fi
 fi
 
