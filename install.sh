@@ -349,7 +349,7 @@ else
 fi
 [ -x "$CL/venv/bin/python" ] && printf '  %-12s %s\n' venv "$CL/venv" || printf '  %-12s MISSING\n' venv
 printf '  %-12s %s\n' skills "$(ls "$CL/skills" | grep -v synced | tr '\n' ' ')"
-printf '  %-12s %s\n' parts "$(tr '\n' ' ' < "$PARTS_FILE" 2>/dev/null)"
+printf '  %-12s %s\n' parts "$(cat "$PARTS_FILE" 2>/dev/null | tr '\n' ' ')"
 printf '  %-12s %s\n' agents "$(ls "$CL/agents" | sed 's/\.md$//' | tr '\n' ' ')"
 [ -d "$STASH" ] && note "replaced files are in $STASH"
 echo "done."
